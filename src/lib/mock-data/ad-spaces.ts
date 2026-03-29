@@ -1,0 +1,43 @@
+import type { AdSpace } from "@/lib/types";
+
+export const adSpaces: AdSpace[] = [
+  {
+    id: "space-001",
+    tenantId: "tenant-shoppr",
+    name: "Recomendación de Producto",
+    spaceType: "product_recommendation",
+    channelFilter: ["whatsapp", "web"],
+    assistantFilter: ["assistant-shoppr"],
+    maxAdsPerConversation: 2,
+    cooldownMinutes: 30,
+    status: "active",
+    createdAt: "2026-01-10T10:00:00Z",
+    updatedAt: "2026-03-15T12:00:00Z",
+  },
+  {
+    id: "space-002",
+    tenantId: "tenant-shoppr",
+    name: "Tip Patrocinado",
+    spaceType: "sponsored_tip",
+    channelFilter: ["whatsapp", "web", "telegram"],
+    assistantFilter: ["assistant-shoppr"],
+    maxAdsPerConversation: 1,
+    cooldownMinutes: 60,
+    status: "active",
+    createdAt: "2026-01-10T10:00:00Z",
+    updatedAt: "2026-03-15T12:00:00Z",
+  },
+  {
+    id: "space-003",
+    tenantId: "tenant-shoppr",
+    name: "Mención de Marca",
+    spaceType: "brand_mention",
+    channelFilter: ["whatsapp", "web", "voice", "telegram"],
+    assistantFilter: ["assistant-shoppr"],
+    maxAdsPerConversation: 3,
+    cooldownMinutes: 15,
+    status: "active",
+    createdAt: "2026-02-01T08:00:00Z",
+    updatedAt: "2026-03-20T10:00:00Z",
+  },
+];
