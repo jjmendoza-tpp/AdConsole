@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, SlidersHorizontal, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -96,7 +96,7 @@ export default function CampaignsPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">Campañas</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Gestiona todas tus campañas publicitarias.
+            Gestiona y optimiza tus campañas publicitarias en Shop.PR
           </p>
         </div>
         <Button render={<Link href="/campaigns/new" />}>
@@ -110,6 +110,14 @@ export default function CampaignsPage() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input placeholder="Buscar campañas..." className="pl-9" />
         </div>
+        <Button variant="outline">
+          <SlidersHorizontal className="h-4 w-4 mr-2" />
+          Filtros
+        </Button>
+        <Button variant="outline">
+          <Download className="h-4 w-4 mr-2" />
+          Exportar
+        </Button>
       </div>
 
       <Card>
@@ -133,6 +141,16 @@ export default function CampaignsPage() {
             </TabsContent>
           ))}
         </Tabs>
+        <div className="flex justify-between items-center border-t px-4 py-3">
+          <p className="text-sm text-muted-foreground">
+            Mostrando <span className="font-bold text-foreground">10</span> de <span className="font-bold text-foreground">124</span> campañas
+          </p>
+          <div className="flex items-center gap-1">
+            <Button size="sm" className="h-8 w-8 p-0">1</Button>
+            <Button size="sm" variant="outline" className="h-8 w-8 p-0">2</Button>
+            <Button size="sm" variant="outline" className="h-8 w-8 p-0">3</Button>
+          </div>
+        </div>
       </Card>
     </div>
   );

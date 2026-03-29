@@ -148,7 +148,7 @@ export function StepReview({ data }: StepReviewProps) {
             <DollarSign className="h-4 w-4 text-primary" />
             Presupuesto
           </div>
-          <div className="grid grid-cols-4 gap-3 text-sm">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
             <div>
               <span className="text-muted-foreground">Diario</span>
               <p className="font-medium tabular-nums">
@@ -205,7 +205,7 @@ export function StepReview({ data }: StepReviewProps) {
           <div className="flex items-center gap-2 text-sm font-medium text-green-800 mb-2">
             Alcance Estimado
           </div>
-          <div className="grid grid-cols-3 gap-4 text-center">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
             <div>
               <p className="text-2xl font-bold text-green-900 tabular-nums">
                 {estimatedImpressions.toLocaleString()}

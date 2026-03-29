@@ -142,6 +142,7 @@ export interface DashboardKPI {
   format: "currency" | "number" | "percentage";
   trend: "up" | "down" | "neutral";
   changePercent: number;
+  subtitle?: string;
 }
 
 // --- Analytics ---

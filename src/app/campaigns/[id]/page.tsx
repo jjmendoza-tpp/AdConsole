@@ -2,7 +2,7 @@
 
 import { use } from "react";
 import Link from "next/link";
-import { ArrowLeft, Pause, Play, Calendar, DollarSign, Eye, MousePointerClick, TrendingUp } from "lucide-react";
+import { ArrowLeft, Pause, Play, Calendar, Eye, MousePointerClick, TrendingUp, DollarSign, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -23,8 +23,7 @@ function formatCurrency(cents: number): string {
   return `$${(cents / 100).toLocaleString("en-US", { minimumFractionDigits: 2 })}`;
 }
 
-// Generate 14-day synthetic performance data for a campaign
-function generatePerformanceData(campaignId: string, totalImpressions: number, totalClicks: number) {
+function generatePerformanceData(totalImpressions: number, totalClicks: number) {
   const days = 14;
   const data = [];
   const baseImpressions = Math.floor(totalImpressions / days);
@@ -41,7 +40,6 @@ function generatePerformanceData(campaignId: string, totalImpressions: number, t
       date: date.toLocaleDateString("es", { day: "numeric", month: "short" }),
       impressions,
       clicks,
-      ctr: impressions > 0 ? parseFloat(((clicks / impressions) * 100).toFixed(1)) : 0,
     });
   }
   return data;
@@ -80,7 +78,7 @@ export default function CampaignDetailPage({
     );
   }
 
-  const performanceData = generatePerformanceData(campaign.id, campaign.totalImpressions, campaign.totalClicks);
+  const performanceData = generatePerformanceData(campaign.totalImpressions, campaign.totalClicks);
   const budgetPercent = campaign.totalBudgetCents > 0
     ? Math.round((campaign.spentCents / campaign.totalBudgetCents) * 100)
     : 0;
@@ -106,6 +104,10 @@ export default function CampaignDetailPage({
           </div>
         </div>
         <div className="flex gap-2">
+          <Button variant="outline" size="sm">
+            <Edit className="h-3.5 w-3.5 mr-1.5" />
+            Editar
+          </Button>
           {campaign.status === "active" && (
             <Button variant="outline" size="sm">
               <Pause className="h-3.5 w-3.5 mr-1.5" />
@@ -122,58 +124,52 @@ export default function CampaignDetailPage({
       </div>
 
       {/* KPIs */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <Card>
           <CardContent className="pt-4 pb-4">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-              <Eye className="h-4 w-4" />
-              Impresiones
-            </div>
-            <p className="text-2xl font-bold tabular-nums">
+            <p className="text-xs text-muted-foreground uppercase tracking-wider">Impresiones</p>
+            <p className="text-2xl font-bold tabular-nums mt-1">
               {campaign.totalImpressions.toLocaleString()}
             </p>
+            <p className="text-xs text-green-600 mt-0.5">+18% conversión</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-4 pb-4">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-              <MousePointerClick className="h-4 w-4" />
-              Clicks
-            </div>
-            <p className="text-2xl font-bold tabular-nums">
+            <p className="text-xs text-muted-foreground uppercase tracking-wider">Clicks</p>
+            <p className="text-2xl font-bold tabular-nums mt-1">
               {campaign.totalClicks.toLocaleString()}
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-4 pb-4">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-              <TrendingUp className="h-4 w-4" />
-              CTR
-            </div>
-            <p className="text-2xl font-bold tabular-nums">{campaign.ctr}%</p>
+            <p className="text-xs text-muted-foreground uppercase tracking-wider">CTR</p>
+            <p className="text-2xl font-bold tabular-nums mt-1">{campaign.ctr}%</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-4 pb-4">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-              <DollarSign className="h-4 w-4" />
-              Gastado
-            </div>
-            <p className="text-2xl font-bold tabular-nums">
+            <p className="text-xs text-muted-foreground uppercase tracking-wider">Gastado</p>
+            <p className="text-2xl font-bold tabular-nums mt-1">
               {formatCurrency(campaign.spentCents)}
             </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4 pb-4">
+            <p className="text-xs text-muted-foreground uppercase tracking-wider">Presupuesto</p>
+            <p className="text-2xl font-bold tabular-nums mt-1">
+              {formatCurrency(campaign.totalBudgetCents)}
+            </p>
             <div className="mt-2">
-              <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
-                <span>{budgetPercent}% del presupuesto</span>
-                <span>{formatCurrency(campaign.totalBudgetCents)}</span>
-              </div>
               <div className="h-1.5 rounded-full bg-muted overflow-hidden">
                 <div
                   className="h-full rounded-full bg-primary transition-all"
                   style={{ width: `${Math.min(budgetPercent, 100)}%` }}
                 />
               </div>
+              <p className="text-[10px] text-muted-foreground mt-1">{budgetPercent}% utilizado</p>
             </div>
           </CardContent>
         </Card>
@@ -189,65 +185,27 @@ export default function CampaignDetailPage({
         <CardContent>
           <div className="h-[280px]">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart
-                data={performanceData}
-                margin={{ top: 5, right: 10, left: 0, bottom: 0 }}
-              >
+              <AreaChart data={performanceData} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
                 <defs>
-                  <linearGradient id="fillImp" x1="0" y1="0" x2="0" y2="1">
+                  <linearGradient id="fillImpDetail" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#3366CC" stopOpacity={0.2} />
                     <stop offset="95%" stopColor="#3366CC" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  vertical={false}
-                  stroke="#e5e7eb"
-                />
-                <XAxis
-                  dataKey="date"
-                  tick={{ fontSize: 11, fill: "#6b7280" }}
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <YAxis
-                  tick={{ fontSize: 11, fill: "#6b7280" }}
-                  tickLine={false}
-                  axisLine={false}
-                  width={50}
-                />
-                <Tooltip
-                  contentStyle={{
-                    fontSize: 12,
-                    borderRadius: 8,
-                    border: "1px solid #e5e7eb",
-                    boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.05)",
-                  }}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="impressions"
-                  name="Impresiones"
-                  stroke="#3366CC"
-                  strokeWidth={2}
-                  fill="url(#fillImp)"
-                />
-                <Area
-                  type="monotone"
-                  dataKey="clicks"
-                  name="Clicks"
-                  stroke="#22c55e"
-                  strokeWidth={2}
-                  fill="transparent"
-                />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+                <XAxis dataKey="date" tick={{ fontSize: 11, fill: "#6b7280" }} tickLine={false} axisLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: "#6b7280" }} tickLine={false} axisLine={false} width={50} />
+                <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid #e5e7eb" }} />
+                <Area type="monotone" dataKey="impressions" name="Impresiones" stroke="#3366CC" strokeWidth={2} fill="url(#fillImpDetail)" />
+                <Area type="monotone" dataKey="clicks" name="Clicks" stroke="#22c55e" strokeWidth={2} fill="transparent" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         </CardContent>
       </Card>
 
-      {/* Configuration */}
-      <div className="grid grid-cols-2 gap-4">
+      {/* Configuration + Targeting */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base font-semibold">
@@ -325,27 +283,27 @@ export default function CampaignDetailPage({
         <CardHeader className="pb-3">
           <CardTitle className="text-base font-semibold">Creativo</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-2 text-sm">
+        <CardContent className="space-y-3 text-sm">
           <div>
             <span className="text-muted-foreground">Plantilla del mensaje</span>
             <p className="mt-1 rounded-md bg-muted/50 p-3 font-mono text-xs">
               {campaign.messageTemplate}
             </p>
           </div>
-          {campaign.ctaUrl && (
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">URL</span>
-              <span className="font-medium text-primary truncate max-w-[300px]">
-                {campaign.ctaUrl}
-              </span>
-            </div>
-          )}
-          {campaign.creativeData?.buttonText && (
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Botón</span>
-              <span className="font-medium">{campaign.creativeData.buttonText}</span>
-            </div>
-          )}
+          <div className="grid grid-cols-2 gap-4">
+            {campaign.ctaUrl && (
+              <div>
+                <span className="text-muted-foreground">URL destino</span>
+                <p className="font-medium text-primary truncate mt-0.5">{campaign.ctaUrl}</p>
+              </div>
+            )}
+            {campaign.creativeData?.buttonText && (
+              <div>
+                <span className="text-muted-foreground">Texto del botón</span>
+                <p className="font-medium mt-0.5">{campaign.creativeData.buttonText}</p>
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
     </div>

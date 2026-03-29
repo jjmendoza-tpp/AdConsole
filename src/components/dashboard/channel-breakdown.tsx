@@ -1,8 +1,34 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
+import { PieChart, Pie, Cell, Label, ResponsiveContainer, Tooltip } from "recharts";
 import { channelBreakdown } from "@/lib/mock-data";
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function renderCenterLabel(props: any) {
+  const { viewBox } = props;
+  const { cx, cy } = viewBox;
+  return (
+    <text x={cx} y={cy} textAnchor="middle" dominantBaseline="central">
+      <tspan
+        x={cx}
+        dy="-0.4em"
+        className="fill-foreground"
+        style={{ fontSize: 20, fontWeight: 700 }}
+      >
+        18.4K
+      </tspan>
+      <tspan
+        x={cx}
+        dy="1.4em"
+        className="fill-muted-foreground"
+        style={{ fontSize: 12 }}
+      >
+        Total
+      </tspan>
+    </text>
+  );
+}
 
 export function ChannelBreakdown() {
   return (
@@ -13,7 +39,7 @@ export function ChannelBreakdown() {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="flex items-center gap-6">
+        <div className="flex flex-col lg:flex-row items-center gap-6">
           <div className="h-[180px] w-[180px] shrink-0">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -29,6 +55,7 @@ export function ChannelBreakdown() {
                   {channelBreakdown.map((entry) => (
                     <Cell key={entry.channel} fill={entry.color} />
                   ))}
+                  <Label content={renderCenterLabel} position="center" />
                 </Pie>
                 <Tooltip
                   contentStyle={{
@@ -45,7 +72,8 @@ export function ChannelBreakdown() {
             </ResponsiveContainer>
           </div>
 
-          <div className="flex flex-col gap-3">
+          {/* Horizontal on mobile, vertical on desktop */}
+          <div className="flex flex-row flex-wrap justify-center gap-3 lg:flex-col lg:gap-3">
             {channelBreakdown.map((channel) => (
               <div key={channel.channel} className="flex items-center gap-2.5">
                 <span

@@ -1,6 +1,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import {
   AreaChart,
   Area,
@@ -23,10 +24,18 @@ export function RevenueChart() {
 
   return (
     <Card>
-      <CardHeader className="pb-2">
+      <CardHeader className="pb-2 flex flex-row items-center justify-between">
         <CardTitle className="text-base font-semibold">
-          Revenue — Últimos 30 días
+          Revenue — Ultimos 30 dias
         </CardTitle>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm">
+            Exportar
+          </Button>
+          <Button variant="outline" size="sm">
+            Detalles
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
         <div className="h-[280px]">

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { LayoutGrid, MessageSquare, Globe, Mic, Send, Clock, Layers, Zap } from "lucide-react";
+import { LayoutGrid, MessageSquare, Globe, Mic, Send, Clock, Layers, Zap, Cpu, MapPin } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,10 +10,10 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { adSpaces } from "@/lib/mock-data";
 
-const spaceTypeLabels: Record<string, { label: string; icon: React.ElementType; color: string }> = {
-  product_recommendation: { label: "Recomendación de Producto", icon: Zap, color: "bg-blue-100 text-blue-700" },
-  sponsored_tip: { label: "Tip Patrocinado", icon: Layers, color: "bg-purple-100 text-purple-700" },
-  brand_mention: { label: "Mención de Marca", icon: LayoutGrid, color: "bg-amber-100 text-amber-700" },
+const spaceTypeLabels: Record<string, { label: string; sublabel: string; icon: React.ElementType; color: string }> = {
+  product_recommendation: { label: "Recomendación de Producto", sublabel: "SUGERIDO", icon: Zap, color: "bg-blue-100 text-blue-700" },
+  sponsored_tip: { label: "Tip Patrocinado", sublabel: "INFORMATIVO", icon: Layers, color: "bg-purple-100 text-purple-700" },
+  brand_mention: { label: "Mención de Marca", sublabel: "BRANDING", icon: LayoutGrid, color: "bg-amber-100 text-amber-700" },
 };
 
 const channelIcons: Record<string, React.ElementType> = {
@@ -24,10 +24,10 @@ const channelIcons: Record<string, React.ElementType> = {
 };
 
 const channelLabels: Record<string, string> = {
-  whatsapp: "WhatsApp",
+  whatsapp: "WA",
   web: "Web",
   voice: "Voz",
-  telegram: "Telegram",
+  telegram: "TG",
 };
 
 export default function AdSpacesPage() {
@@ -36,12 +36,14 @@ export default function AdSpacesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">Espacios Publicitarios</h1>
+        <p className="text-xs text-muted-foreground mb-1">Espacios Publicitarios &gt; Detalle</p>
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">Gestión de Espacio</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Configura los tipos de espacios donde se muestran anuncios dentro de las conversaciones.
+          Configura los parámetros de visualización para los anuncios.
         </p>
       </div>
 
+      {/* Main space cards */}
       <div className="grid gap-4">
         {adSpaces.map((space) => {
           const typeConfig = spaceTypeLabels[space.spaceType] || spaceTypeLabels.product_recommendation;
@@ -49,7 +51,7 @@ export default function AdSpacesPage() {
           const isEditing = editingId === space.id;
 
           return (
-            <Card key={space.id}>
+            <Card key={space.id} className={isEditing ? "border-primary/30" : ""}>
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
@@ -57,24 +59,24 @@ export default function AdSpacesPage() {
                       <TypeIcon className="h-5 w-5" />
                     </div>
                     <div>
-                      <CardTitle className="text-base font-semibold">
-                        {space.name}
-                      </CardTitle>
-                      <Badge variant="outline" className={`text-xs mt-1 ${typeConfig.color}`}>
-                        {typeConfig.label}
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        <CardTitle className="text-base font-semibold">
+                          {space.name}
+                        </CardTitle>
+                        <Badge variant="outline" className={`text-[10px] ${typeConfig.color}`}>
+                          {typeConfig.sublabel}
+                        </Badge>
+                      </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-muted-foreground">
-                        {space.status === "active" ? "Activo" : "Inactivo"}
-                      </span>
-                      <Switch
-                        checked={space.status === "active"}
-                        onCheckedChange={() => {}}
-                      />
-                    </div>
+                    <span className="text-xs text-muted-foreground">
+                      {space.status === "active" ? "ACTIVO" : "INACTIVO"}
+                    </span>
+                    <Switch
+                      checked={space.status === "active"}
+                      onCheckedChange={() => {}}
+                    />
                     <Button
                       variant="outline"
                       size="sm"
@@ -89,7 +91,7 @@ export default function AdSpacesPage() {
                 <div className="grid grid-cols-3 gap-6">
                   {/* Channels */}
                   <div>
-                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
                       Canales
                     </span>
                     <div className="flex gap-2 mt-2">
@@ -110,8 +112,8 @@ export default function AdSpacesPage() {
 
                   {/* Max Ads */}
                   <div>
-                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      Máx. por Conversación
+                    <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
+                      MaxConv
                     </span>
                     <p className="mt-2 text-lg font-semibold tabular-nums">
                       {space.maxAdsPerConversation}
@@ -120,7 +122,7 @@ export default function AdSpacesPage() {
 
                   {/* Cooldown */}
                   <div>
-                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
                       Cooldown
                     </span>
                     <p className="mt-2 text-lg font-semibold tabular-nums flex items-center gap-1.5">
@@ -135,16 +137,24 @@ export default function AdSpacesPage() {
                   <div className="mt-4 pt-4 border-t border-border space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
                     <div className="grid grid-cols-3 gap-4">
                       <div className="space-y-2">
-                        <Label>Nombre</Label>
+                        <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                          Nombre del Espacio
+                        </Label>
                         <Input defaultValue={space.name} />
+                        <p className="text-[10px] text-muted-foreground">Este nombre se mostrará en los reportes de anuncios.</p>
                       </div>
                       <div className="space-y-2">
-                        <Label>Máx. Anuncios por Conversación</Label>
+                        <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                          Max Anuncios por Conversación
+                        </Label>
                         <Input type="number" defaultValue={space.maxAdsPerConversation} min={1} max={10} />
                       </div>
                       <div className="space-y-2">
-                        <Label>Cooldown (minutos)</Label>
+                        <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                          Cooldown (Minutos)
+                        </Label>
                         <Input type="number" defaultValue={space.cooldownMinutes} min={1} max={1440} />
+                        <p className="text-[10px] text-muted-foreground">Tiempo mínimo antes de repetir la recomendación.</p>
                       </div>
                     </div>
                     <div className="flex justify-end gap-2">
@@ -161,6 +171,75 @@ export default function AdSpacesPage() {
             </Card>
           );
         })}
+      </div>
+
+      {/* Other Spaces Section */}
+      <div>
+        <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">
+          Otros Espacios Disponibles
+        </h3>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between rounded-lg border p-3">
+            <div className="flex items-center gap-3">
+              <span className="text-lg">🏷️</span>
+              <div>
+                <p className="text-sm font-medium">Banner Principal</p>
+                <p className="text-xs text-muted-foreground">4 Activo · 1 Anuncio Activo</p>
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center justify-between rounded-lg border p-3">
+            <div className="flex items-center gap-3">
+              <span className="text-lg">🎁</span>
+              <div>
+                <p className="text-sm font-medium">Oferta del Día</p>
+                <p className="text-xs text-muted-foreground">1 Pausado · 0 Anuncios Activos</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom Info Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card className="p-4">
+          <div className="flex items-start gap-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+              <Cpu className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold">Optimización Automática</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Prometheus está ajustando los pujas para este espacio basándose en el historial de las últimas 24h.
+              </p>
+              <a href="#" className="text-xs text-primary font-medium mt-2 inline-block hover:underline">
+                VER REPORTES IA
+              </a>
+            </div>
+          </div>
+        </Card>
+        <Card className="p-4">
+          <div className="flex items-start gap-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+              <MapPin className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold">Previsualización de Ubicación</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Este espacio aparece en la sección &quot;Te podría interesar&quot; del carrito de compras.
+              </p>
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      {/* Footer */}
+      <div className="flex items-center justify-between text-xs text-muted-foreground border-t pt-4">
+        <p>Prometheus Digital Services - Shop.PR Console v1.4.2</p>
+        <div className="flex items-center gap-4">
+          <a href="#" className="hover:underline">Documentación de API</a>
+          <a href="#" className="hover:underline">Soporte Técnico</a>
+        </div>
       </div>
     </div>
   );

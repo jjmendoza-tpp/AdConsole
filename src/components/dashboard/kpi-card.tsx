@@ -49,7 +49,7 @@ export function KPICard({ kpi }: { kpi: DashboardKPI }) {
           {formatValue(kpi.value, kpi.format)}
         </span>
         <p className="mt-1.5 text-xs text-muted-foreground">
-          vs. periodo anterior
+          {kpi.subtitle || "vs. periodo anterior"}
         </p>
       </CardContent>
     </Card>
