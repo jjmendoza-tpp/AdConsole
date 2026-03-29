@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { Check, Shield, Sparkles, CloudUpload } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -119,7 +120,7 @@ export function WizardShell() {
           <Button variant="outline" onClick={() => { setLaunched(false); setCurrentStep(1); setData(initialData); }}>
             Crear otra campaña
           </Button>
-          <Button render={<a href="/campaigns" />}>
+          <Button render={<Link href="/campaigns" />}>
             Ver campañas
           </Button>
         </div>

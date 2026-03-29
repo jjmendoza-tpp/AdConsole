@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -67,12 +68,12 @@ export function TopCampaignsTable() {
         <CardTitle className="text-base font-semibold">
           Top Campanas Activas
         </CardTitle>
-        <a
+        <Link
           href="/campaigns"
           className="text-sm font-medium text-primary hover:underline"
         >
           Ver todas las campanas
-        </a>
+        </Link>
       </CardHeader>
       <CardContent>
         <Table>
