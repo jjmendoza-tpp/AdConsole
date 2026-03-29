@@ -4,10 +4,12 @@ Reference frontend for the Ad Console prototype published on Vercel.
 
 ## Branches
 
-- `main`: exact baseline for the production deployment `https://prototype-two-dun.vercel.app`
+- `main`: sanitized mirror of the production deployment `https://prototype-two-dun.vercel.app`
 - `codex/stitch-followup`: local follow-up work after the deployed baseline
 
-The production baseline corresponds to commit `43496e7d6103fc0d4725550ac0e62694d400bff2` and is also tagged as `deploy/prototype-two-dun-2026-03-28`.
+The original production deployment corresponds to commit `43496e7d6103fc0d4725550ac0e62694d400bff2`.
+
+The current `main` branch keeps that baseline behavior while sanitizing UI placeholder copy that looked like a live API key. This was done so the repository can be shared without exposing key-like strings that trigger scanners or create trust ambiguity.
 
 ## Getting Started
 
