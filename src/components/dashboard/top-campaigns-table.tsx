@@ -63,9 +63,9 @@ function formatImpressions(value: number): string {
 
 export function TopCampaignsTable() {
   return (
-    <Card>
-      <CardHeader className="pb-2 flex flex-row items-center justify-between">
-        <CardTitle className="text-base font-semibold">
+    <Card className="rounded-xl border-slate-100 shadow-sm">
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <CardTitle className="text-lg font-bold tracking-tight">
           Top Campanas Activas
         </CardTitle>
         <Link

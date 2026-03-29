@@ -8,6 +8,7 @@ export const dashboardKPIs: DashboardKPI[] = [
     format: "currency",
     trend: "up",
     changePercent: 15.1,
+    progressPercent: 75,
   },
   {
     label: "Campanas Activas",

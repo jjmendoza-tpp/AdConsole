@@ -32,14 +32,14 @@ function renderCenterLabel(props: any) {
 
 export function ChannelBreakdown() {
   return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-base font-semibold">
+    <Card className="rounded-xl border-slate-100 shadow-sm">
+      <CardHeader className="pb-4">
+        <CardTitle className="text-lg font-bold tracking-tight">
           Impresiones por Canal
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="flex flex-col lg:flex-row items-center gap-6">
+        <div className="flex flex-col items-center gap-6 lg:flex-row lg:items-start">
           <div className="h-[180px] w-[180px] shrink-0">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -47,8 +47,8 @@ export function ChannelBreakdown() {
                   data={channelBreakdown}
                   cx="50%"
                   cy="50%"
-                  innerRadius={60}
-                  outerRadius={85}
+                  innerRadius={58}
+                  outerRadius={82}
                   paddingAngle={3}
                   dataKey="percentage"
                 >
@@ -73,15 +73,18 @@ export function ChannelBreakdown() {
           </div>
 
           {/* Horizontal on mobile, vertical on desktop */}
-          <div className="flex flex-row flex-wrap justify-center gap-3 lg:flex-col lg:gap-3">
+          <div className="flex w-full flex-row flex-wrap justify-center gap-3 lg:flex-col lg:gap-4">
             {channelBreakdown.map((channel) => (
-              <div key={channel.channel} className="flex items-center gap-2.5">
+              <div
+                key={channel.channel}
+                className="flex min-w-[150px] items-center gap-3 lg:min-w-0"
+              >
                 <span
                   className="h-3 w-3 rounded-full shrink-0"
                   style={{ backgroundColor: channel.color }}
                 />
                 <div className="flex flex-col">
-                  <span className="text-sm font-medium text-foreground">
+                  <span className="text-sm font-semibold text-foreground">
                     {channel.label}
                   </span>
                   <span className="text-xs text-muted-foreground tabular-nums">

@@ -143,6 +143,7 @@ export interface DashboardKPI {
   trend: "up" | "down" | "neutral";
   changePercent: number;
   subtitle?: string;
+  progressPercent?: number;
 }
 
 // --- Analytics ---

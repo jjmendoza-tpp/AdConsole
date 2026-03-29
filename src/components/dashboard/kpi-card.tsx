@@ -23,23 +23,23 @@ export function KPICard({ kpi }: { kpi: DashboardKPI }) {
   const isPositive = kpi.trend === "up";
 
   return (
-    <Card className="card-hover">
-      <CardContent className="pt-5 pb-5">
-        <div className="flex items-center justify-between mb-3">
-          <p className="text-sm font-medium text-muted-foreground">
+    <Card className="card-hover border-slate-100 shadow-sm">
+      <CardContent className="p-4">
+        <div className="mb-2 flex items-start justify-between gap-3">
+          <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
             {kpi.label}
           </p>
           <span
-            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold ${
+            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold ${
               isPositive
-                ? "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-400"
-                : "bg-red-50 text-red-600 dark:bg-red-950 dark:text-red-400"
+                ? "bg-green-50 text-green-700"
+                : "bg-red-50 text-red-600"
             }`}
           >
             {isPositive ? (
-              <TrendingUp className="h-3 w-3" />
+              <TrendingUp className="h-3.5 w-3.5" />
             ) : (
-              <TrendingDown className="h-3 w-3" />
+              <TrendingDown className="h-3.5 w-3.5" />
             )}
             {isPositive ? "+" : ""}
             {kpi.changePercent.toFixed(1)}%
@@ -48,9 +48,18 @@ export function KPICard({ kpi }: { kpi: DashboardKPI }) {
         <span className="text-3xl font-bold tracking-tight text-foreground tabular-nums">
           {formatValue(kpi.value, kpi.format)}
         </span>
-        <p className="mt-1.5 text-xs text-muted-foreground">
-          {kpi.subtitle || "vs. periodo anterior"}
-        </p>
+        {typeof kpi.progressPercent === "number" ? (
+          <div className="mt-3 h-1 w-full overflow-hidden rounded-full bg-slate-100">
+            <div
+              className="h-full rounded-full bg-primary"
+              style={{ width: `${kpi.progressPercent}%` }}
+            />
+          </div>
+        ) : (
+          <p className="mt-1.5 text-[11px] text-muted-foreground">
+            {kpi.subtitle || "vs. periodo anterior"}
+          </p>
+        )}
       </CardContent>
     </Card>
   );
