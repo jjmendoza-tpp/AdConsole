@@ -1,36 +1,35 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Ad Console Prototype
+
+Reference frontend for the Ad Console prototype published on Vercel.
+
+## Branches
+
+- `main`: sanitized mirror of the production deployment `https://prototype-two-dun.vercel.app`
+- `codex/stitch-followup`: local follow-up work after the deployed baseline
+
+The original production deployment corresponds to commit `43496e7d6103fc0d4725550ac0e62694d400bff2`.
+
+The current `main` branch keeps that baseline behavior while sanitizing UI placeholder copy that looked like a live API key. This was done so the repository can be shared without exposing key-like strings that trigger scanners or create trust ambiguity.
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Validation
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run lint
+npm run build
+```
 
-## Learn More
+`npm run build` may emit Recharts static-generation width/height warnings during prerender. They are known non-blocking warnings for this prototype.
 
-To learn more about Next.js, take a look at the following resources:
+## Notes
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- The repo is intended as a reusable reference for code-generation tools and future prototype iterations.
+- Local-only folders such as `.claude/`, `.gstack/`, `.next/`, `node_modules/`, and `.vercel/` are excluded from Git history.
