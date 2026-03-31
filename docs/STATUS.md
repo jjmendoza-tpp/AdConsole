@@ -31,7 +31,7 @@ Last updated: 2026-03-31
 - `npm run build` -> pass
 - `npm run test:smoke` -> pass
 - `git ls-files '.env*'` -> no tracked env files
-- `git grep -n '/Users/josejuanmendoza' -- .` -> no results
+- no machine-local absolute paths remain in tracked docs
 - no tracked `route.ts`
 - no tracked `middleware`
 

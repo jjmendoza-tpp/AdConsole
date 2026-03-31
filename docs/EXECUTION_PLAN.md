@@ -75,7 +75,7 @@ Exit criteria:
 - a new dev can clone and understand local setup without personal path references
 
 Validation:
-- `git grep '/Users/josejuanmendoza'`
+- confirm no machine-local absolute paths remain in tracked docs
 
 ### Phase 2: Request-Scoped Repository
 Status: `done`

@@ -50,7 +50,7 @@ La UI no debe importar `@/lib/mock-data` directamente. El mock solo vive detrás
 - `docs/EXECUTION_PLAN.md`
 - `docs/STATUS.md`
 
-## Fuente de verdad
+## Contexto externo no incluido
 
 - La fuente de verdad de negocio y diseño vive fuera de este repo compartido.
 - Este repositorio contiene únicamente el contexto técnico necesario para ejecutar, revisar y endurecer el prototipo.
