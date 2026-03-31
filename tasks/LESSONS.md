@@ -24,3 +24,13 @@
 ### Portability is a first-class requirement
 
 - tracked docs must not depend on personal absolute paths if the repo is meant to be shared for external validation
+
+### Plugin-ready error handling must be consistent across server routes
+
+- if one route translates upstream/auth/tenant failures into UI states, all repository-backed server routes should follow the same loader-state pattern
+- placeholder adapters such as `flamerly-repository.ts` should throw typed data errors, not generic errors, so fallback UI remains consistent
+
+### Request-scoped means request-derived
+
+- passing a `context` object is not enough if its tenant and token still come only from process env
+- real plugin seams must resolve auth and tenant from request inputs such as headers or cookies

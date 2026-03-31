@@ -57,13 +57,12 @@ Eso implica que este repo no debe asumir:
 
 ## Riesgos arquitectónicos aún abiertos
 
-- el factory del repositorio todavía debe volverse request-scoped
-- el contrato con Flamerly todavía no está formalizado en código
+- el contrato con Flamerly ya está tipado, pero todavía no está ejercitado contra un upstream real
 - el mock actual valida la UI y el seam, pero no todavía los estados upstream reales
+- el adapter real de Flamerly todavía no existe, así que `mode=flamerly` solo valida estados de error controlados
 
 ## Resultado esperado del siguiente ciclo
 
-- factory con contexto por request
-- config portable por entorno
-- contrato `/api/ads/v1/*` documentado y tipado
-- esqueleto visible de `flamerly-repository.ts`
+- implementar el adapter real de Flamerly
+- conectar request context del host a fetch upstream real
+- mantener los mismos estados de integración ya unificados en todas las rutas críticas

@@ -10,8 +10,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { createAdConsoleRequestContext } from "@/lib/adconsole/config";
+import { IntegrationState } from "@/components/shared/integration-state";
+import { getAdConsoleErrorState } from "@/lib/adconsole/errors";
 import { getAdConsoleRepository } from "@/lib/adconsole/repository";
+import { getServerAdConsoleRequestContext } from "@/lib/adconsole/server-context";
+import type { Keyword } from "@/lib/types";
 
 const trendConfig: Record<string, { icon: React.ElementType; label: string; className: string }> = {
   up: { icon: TrendingUp, label: "Subiendo", className: "text-green-600" },
@@ -19,10 +22,55 @@ const trendConfig: Record<string, { icon: React.ElementType; label: string; clas
   stable: { icon: Minus, label: "Estable", className: "text-muted-foreground" },
 };
 
+type KeywordsPageState =
+  | {
+      kind: "ready";
+      keywords: Keyword[];
+    }
+  | {
+      kind: "state";
+      variant: "empty" | "unauthorized" | "tenantMissing" | "upstreamError";
+    };
+
+async function loadKeywordsPageState(): Promise<KeywordsPageState> {
+  try {
+    const repository = getAdConsoleRepository(
+      await getServerAdConsoleRequestContext(),
+    );
+    const keywords = await repository.listKeywords();
+
+    if (keywords.length === 0) {
+      return { kind: "state", variant: "empty" };
+    }
+
+    return { kind: "ready", keywords };
+  } catch (error) {
+    const errorState = getAdConsoleErrorState(error);
+
+    if (errorState) {
+      return { kind: "state", variant: errorState };
+    }
+
+    throw error;
+  }
+}
+
 export default async function KeywordsPage() {
-  const repository = getAdConsoleRepository(createAdConsoleRequestContext());
-  const keywords = await repository.listKeywords();
-  const sorted = [...keywords].sort((a, b) => b.volume - a.volume);
+  const state = await loadKeywordsPageState();
+
+  if (state.kind === "state") {
+    return state.variant === "empty" ? (
+      <IntegrationState
+        variant="empty"
+        actionHref="/campaigns/new"
+        actionLabel="Crear campaña"
+      />
+    ) : (
+      <IntegrationState variant={state.variant} />
+    );
+  }
+
+  const sorted = [...state.keywords].sort((a, b) => b.volume - a.volume);
 
   return (
     <div className="space-y-6">

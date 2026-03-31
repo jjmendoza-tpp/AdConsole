@@ -36,7 +36,6 @@ Already completed before this plan:
 Known baseline risks:
 - Recharts emits non-blocking prerender warnings during `build`
 - data layer is still mock-backed
-- repository factory is not yet request-scoped
 - tracked docs still need to be made fully portable for external contributors
 
 ## Phase Map
@@ -91,6 +90,7 @@ Tasks:
 
 Exit criteria:
 - repository creation is explicit and request-scoped
+- server routes derive tenant/auth context from request input instead of process-global defaults
 
 Validation:
 - typecheck through `npm run build`

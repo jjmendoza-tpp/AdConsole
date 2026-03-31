@@ -1,8 +1,8 @@
 import { WizardShell } from "@/components/campaigns/wizard-shell";
 import { IntegrationState } from "@/components/shared/integration-state";
-import { createAdConsoleRequestContext } from "@/lib/adconsole/config";
 import { getAdConsoleErrorState } from "@/lib/adconsole/errors";
 import { getAdConsoleRepository } from "@/lib/adconsole/repository";
+import { getServerAdConsoleRequestContext } from "@/lib/adconsole/server-context";
 
 type NewCampaignPageState =
   | {
@@ -17,7 +17,9 @@ type NewCampaignPageState =
 
 async function loadNewCampaignPageState(): Promise<NewCampaignPageState> {
   try {
-    const repository = getAdConsoleRepository(createAdConsoleRequestContext());
+    const repository = getAdConsoleRepository(
+      await getServerAdConsoleRequestContext(),
+    );
     const [advertisers, adSpaces] = await Promise.all([
       repository.listAdvertisers(),
       repository.listAdSpaces(),

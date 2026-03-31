@@ -5,8 +5,6 @@ export type AdConsoleDataSource = (typeof supportedDataSources)[number];
 export interface AdConsoleConfig {
   dataSource: AdConsoleDataSource;
   flamerlyApiBasePath: string;
-  defaultTenantId: string | null;
-  defaultAccessToken: string | null;
 }
 
 export interface AdConsoleRequestContext {
@@ -34,8 +32,6 @@ export const adConsoleConfig: AdConsoleConfig = {
   flamerlyApiBasePath:
     sanitizeOptionalEnv(process.env.ADCONSOLE_FLAMERLY_API_BASE_PATH) ??
     "/api/ads/v1",
-  defaultTenantId: sanitizeOptionalEnv(process.env.ADCONSOLE_TENANT_ID),
-  defaultAccessToken: sanitizeOptionalEnv(process.env.ADCONSOLE_ACCESS_TOKEN),
 };
 
 export function createAdConsoleRequestContext(
@@ -43,8 +39,8 @@ export function createAdConsoleRequestContext(
 ): AdConsoleRequestContext {
   return {
     mode: adConsoleConfig.dataSource,
-    tenantId: adConsoleConfig.defaultTenantId,
-    accessToken: adConsoleConfig.defaultAccessToken,
+    tenantId: null,
+    accessToken: null,
     apiBasePath: adConsoleConfig.flamerlyApiBasePath,
     ...overrides,
   };

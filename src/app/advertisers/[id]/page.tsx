@@ -2,9 +2,9 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { AdvertiserDetail } from "@/components/advertisers/advertiser-detail";
 import { IntegrationState } from "@/components/shared/integration-state";
-import { createAdConsoleRequestContext } from "@/lib/adconsole/config";
 import { getAdConsoleErrorState } from "@/lib/adconsole/errors";
 import { getAdConsoleRepository } from "@/lib/adconsole/repository";
+import { getServerAdConsoleRequestContext } from "@/lib/adconsole/server-context";
 
 type AdvertiserDetailPageState =
   | {
@@ -26,7 +26,9 @@ async function loadAdvertiserDetailPageState(
   id: string,
 ): Promise<AdvertiserDetailPageState> {
   try {
-    const repository = getAdConsoleRepository(createAdConsoleRequestContext());
+    const repository = getAdConsoleRepository(
+      await getServerAdConsoleRequestContext(),
+    );
     const [advertiser, campaigns] = await Promise.all([
       repository.getAdvertiserById(id),
       repository.listCampaigns(),

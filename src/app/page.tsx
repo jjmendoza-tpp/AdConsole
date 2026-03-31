@@ -3,12 +3,12 @@ import { RevenueChart } from "@/components/dashboard/revenue-chart";
 import { TopCampaignsTable } from "@/components/dashboard/top-campaigns-table";
 import { ChannelBreakdown } from "@/components/dashboard/channel-breakdown";
 import { IntegrationState } from "@/components/shared/integration-state";
-import { createAdConsoleRequestContext } from "@/lib/adconsole/config";
 import { getAdConsoleErrorState } from "@/lib/adconsole/errors";
 import {
   getAdConsoleRepository,
   type DashboardSummary,
 } from "@/lib/adconsole/repository";
+import { getServerAdConsoleRequestContext } from "@/lib/adconsole/server-context";
 
 type DashboardPageState =
   | {
@@ -22,7 +22,9 @@ type DashboardPageState =
 
 async function loadDashboardPageState(): Promise<DashboardPageState> {
   try {
-    const repository = getAdConsoleRepository(createAdConsoleRequestContext());
+    const repository = getAdConsoleRepository(
+      await getServerAdConsoleRequestContext(),
+    );
     const dashboardSummary = await repository.getDashboardSummary();
 
     if (

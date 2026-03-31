@@ -14,9 +14,9 @@ import {
 } from "@/components/ui/table";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { IntegrationState } from "@/components/shared/integration-state";
-import { createAdConsoleRequestContext } from "@/lib/adconsole/config";
 import { getAdConsoleErrorState } from "@/lib/adconsole/errors";
 import { getAdConsoleRepository } from "@/lib/adconsole/repository";
+import { getServerAdConsoleRequestContext } from "@/lib/adconsole/server-context";
 import type { Campaign, CampaignStatus } from "@/lib/types";
 
 const statusTabs: { value: string; label: string }[] = [
@@ -108,7 +108,9 @@ type CampaignsPageState =
 
 async function loadCampaignsPageState(): Promise<CampaignsPageState> {
   try {
-    const repository = getAdConsoleRepository(createAdConsoleRequestContext());
+    const repository = getAdConsoleRepository(
+      await getServerAdConsoleRequestContext(),
+    );
     const campaigns = await repository.listCampaigns();
 
     if (campaigns.length === 0) {

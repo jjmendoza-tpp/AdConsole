@@ -40,6 +40,7 @@ Status: `done`
 - [x] Define `AdConsoleRequestContext`
 - [x] Refactor repository factory to accept context
 - [x] Update pages/loaders to pass context explicitly
+- [x] Derive request context from server headers/cookies instead of process-global tenant/token defaults
 - [x] Keep mock mode as the active runtime path
 
 ## Phase 3: Portable Runtime Config

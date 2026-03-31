@@ -55,6 +55,12 @@ La referencia tipada del contrato ahora vive en:
 - `accessToken`
 - `apiBasePath`
 
+Regla actual:
+
+- `tenantId` y `accessToken` deben derivarse del request del host plugin
+- este repo ya no los toma de variables globales del proceso
+- el helper server-side actual busca primero headers y luego cookies
+
 ## Lo que ya está listo
 
 - la UI ya no depende directamente de `@/lib/mock-data`
@@ -63,13 +69,14 @@ La referencia tipada del contrato ahora vive en:
 
 ## Lo que falta para quedar más cerca de Flamerly
 
-- preparar estados de loading, empty y upstream error
+- implementar el adapter real contra `/api/ads/v1/*`
+- acordar el contrato exacto de headers/cookies que Flamerly inyectará al plugin
 
 ## Adapter skeleton actual
 
 - `src/lib/adconsole/flamerly-repository.ts` ya existe
 - implementa la misma interfaz que el mock repository
-- hoy responde con guards de `not implemented`
+- hoy responde con errores tipados de `tenant_missing`, `unauthorized` o `upstream_error`
 - no debe activarse en runtime mientras el adapter real no exista
 
 ## Errores upstream esperados

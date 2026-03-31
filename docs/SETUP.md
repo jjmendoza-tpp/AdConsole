@@ -47,15 +47,13 @@ Variables soportadas:
   - default actual recomendado: `mock`
 - `ADCONSOLE_FLAMERLY_API_BASE_PATH`
   - default: `/api/ads/v1`
-- `ADCONSOLE_TENANT_ID`
-  - opcional
-- `ADCONSOLE_ACCESS_TOKEN`
-  - opcional
 
 Notas:
 
 - mientras `ADCONSOLE_DATA_SOURCE=mock`, no se necesitan credenciales reales
 - `flamerly` queda reservado para el adapter futuro y no debe activarse todavía en este ciclo
+- `tenantId` y `accessToken` ya no salen de variables globales del proceso
+- cuando exista host real, ese contexto deberá entrar por request headers o cookies del contenedor Flamerly
 
 ## Qué no existe en este repo
 

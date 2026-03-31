@@ -14,6 +14,7 @@ Last updated: 2026-03-31
 - removed direct `@/lib/mock-data` imports from `src`
 - introduced async repository seam under `src/lib/adconsole/`
 - refactored repository creation to require explicit request context
+- moved server routes to derive `tenantId` and `accessToken` from request headers/cookies
 - preserved current UX/UI while rerouting data access
 - updated tracked docs toward the current architecture
 - added portable runtime config and `.env.example`
@@ -21,6 +22,7 @@ Last updated: 2026-03-31
 - added reusable integration states and app-wide loading state
 - added smoke test coverage for the main review routes
 - sanitized demo API key placeholder in settings
+- unified integration-state handling across analytics, ad spaces, advertisers, and keywords
 
 ## Validations Already Confirmed
 
@@ -37,14 +39,15 @@ Last updated: 2026-03-31
 
 - Recharts prerender warnings remain during `build`
 - Flamerly mode is defined but intentionally inactive until the adapter real is implemented
+- the host-side contract for forwarding auth and tenant context into the plugin still needs to be locked down with the Flamerly backend/container
 
 ## Next Recommended Step
 
 Execution plan complete.
 
 Concrete entry point:
-- optional next step: stage and open review for DEV/CTO
 - optional next step: implement the real Flamerly adapter on top of the current seam
+- optional next step: align exact request header/cookie contract with Flamerly host runtime
 
 ## Do Not Change in Future Sessions
 
