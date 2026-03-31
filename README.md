@@ -12,16 +12,12 @@ Frontend de referencia del prototipo de Ad Console desplegado en Vercel y prepar
 
 - Nombre canónico local del proyecto: `adconsole`
 - Proyecto real en Vercel: `adconsole`
+- URL estable de producción: `https://adconsole.vercel.app`
 - `main` representa el estado técnico de referencia del prototipo
 - El frontend sigue usando datos mock a través de `src/lib/adconsole/*`
 - No existen `route.ts`, `middleware` ni auth propia en este repo
 - La documentación operativa compartible vive en `docs/`
-
-Contexto histórico de deploy:
-
-- Alias histórico de producción observado: `https://prototype-two-dun.vercel.app`
-- Deployment exacto de referencia observado: `https://prototype-5au1czrdw-jjmendoza-1028s-projects.vercel.app`
-- Commit de referencia productiva observado: `ae59335ed23309af9b2f00bbd1e2ee6fcf0bdedf`
+- El deployment visual de Vercel puede requerir acceso autenticado al proyecto si Vercel Authentication sigue activa
 
 ## Arquitectura
 
@@ -122,5 +118,5 @@ Para la secuencia de revisión técnica completa, ver `docs/QA_CHECKLIST.md`.
 - La zona más sensible de QA visual sigue siendo el primer fold del dashboard: sidebar, top header, KPI cards, revenue chart, breakdown y tabla principal.
 - Para compartir el prototipo:
   - usar el repo Git como fuente técnica oficial
-  - usar el deployment de Vercel como referencia visual y de QA
+  - usar `https://adconsole.vercel.app` como referencia visual y de QA cuando el reviewer tenga acceso
   - no usar `.zip` como vía principal de colaboración
