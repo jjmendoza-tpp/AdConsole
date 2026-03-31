@@ -2,11 +2,11 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PieChart, Pie, Cell, Label, ResponsiveContainer, Tooltip } from "recharts";
-import { channelBreakdown } from "@/lib/mock-data";
+import type { ChannelBreakdown as ChannelBreakdownPoint } from "@/lib/types";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function renderCenterLabel(props: any) {
-  const { viewBox } = props;
+  const { viewBox, totalLabel } = props;
   const { cx, cy } = viewBox;
   return (
     <text x={cx} y={cy} textAnchor="middle" dominantBaseline="central">
@@ -16,7 +16,7 @@ function renderCenterLabel(props: any) {
         className="fill-foreground"
         style={{ fontSize: 20, fontWeight: 700 }}
       >
-        18.4K
+        {totalLabel}
       </tspan>
       <tspan
         x={cx}
@@ -30,7 +30,17 @@ function renderCenterLabel(props: any) {
   );
 }
 
-export function ChannelBreakdown() {
+interface ChannelBreakdownProps {
+  data: ChannelBreakdownPoint[];
+}
+
+export function ChannelBreakdown({ data }: ChannelBreakdownProps) {
+  const totalImpressions = data.reduce((sum, item) => sum + item.impressions, 0);
+  const totalLabel =
+    totalImpressions >= 1000
+      ? `${(totalImpressions / 1000).toFixed(1)}K`
+      : totalImpressions.toString();
+
   return (
     <Card className="rounded-xl border-slate-100 shadow-sm">
       <CardHeader className="pb-4">
@@ -44,7 +54,7 @@ export function ChannelBreakdown() {
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
-                  data={channelBreakdown}
+                  data={data}
                   cx="50%"
                   cy="50%"
                   innerRadius={58}
@@ -52,10 +62,18 @@ export function ChannelBreakdown() {
                   paddingAngle={3}
                   dataKey="percentage"
                 >
-                  {channelBreakdown.map((entry) => (
+                  {data.map((entry) => (
                     <Cell key={entry.channel} fill={entry.color} />
                   ))}
-                  <Label content={renderCenterLabel} position="center" />
+                  <Label
+                    content={(props) =>
+                      renderCenterLabel({
+                        ...props,
+                        totalLabel,
+                      })
+                    }
+                    position="center"
+                  />
                 </Pie>
                 <Tooltip
                   contentStyle={{
@@ -64,8 +82,8 @@ export function ChannelBreakdown() {
                     border: "1px solid #e5e7eb",
                   }}
                   formatter={(value, _name, props) => [
-                    `${value}% (${(props.payload as typeof channelBreakdown[number]).impressions.toLocaleString()})`,
-                    (props.payload as typeof channelBreakdown[number]).label,
+                    `${value}% (${(props.payload as ChannelBreakdownPoint).impressions.toLocaleString()})`,
+                    (props.payload as ChannelBreakdownPoint).label,
                   ]}
                 />
               </PieChart>
@@ -74,7 +92,7 @@ export function ChannelBreakdown() {
 
           {/* Horizontal on mobile, vertical on desktop */}
           <div className="flex w-full flex-row flex-wrap justify-center gap-3 lg:flex-col lg:gap-4">
-            {channelBreakdown.map((channel) => (
+            {data.map((channel) => (
               <div
                 key={channel.channel}
                 className="flex min-w-[150px] items-center gap-3 lg:min-w-0"

@@ -1,7 +1,7 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
-import { advertisers, adSpaces } from "@/lib/mock-data";
+import type { AdSpace, Advertiser } from "@/lib/types";
 import type { WizardData } from "../wizard-shell";
 import {
   Calendar,
@@ -15,6 +15,8 @@ import {
 } from "lucide-react";
 
 interface StepReviewProps {
+  adSpaces: AdSpace[];
+  advertisers: Advertiser[];
   data: WizardData;
 }
 
@@ -43,7 +45,7 @@ function formatCurrency(cents: number): string {
   return `$${(cents / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
-export function StepReview({ data }: StepReviewProps) {
+export function StepReview({ adSpaces, advertisers, data }: StepReviewProps) {
   const advertiser = advertisers.find((a) => a.id === data.advertiserId);
   const adSpace = adSpaces.find((s) => s.id === data.adSpaceId);
   const estimatedImpressions =

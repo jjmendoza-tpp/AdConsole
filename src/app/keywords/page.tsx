@@ -1,5 +1,3 @@
-"use client";
-
 import { Search, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,7 +10,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { keywords } from "@/lib/mock-data";
+import { createAdConsoleRequestContext } from "@/lib/adconsole/config";
+import { getAdConsoleRepository } from "@/lib/adconsole/repository";
 
 const trendConfig: Record<string, { icon: React.ElementType; label: string; className: string }> = {
   up: { icon: TrendingUp, label: "Subiendo", className: "text-green-600" },
@@ -20,7 +19,9 @@ const trendConfig: Record<string, { icon: React.ElementType; label: string; clas
   stable: { icon: Minus, label: "Estable", className: "text-muted-foreground" },
 };
 
-export default function KeywordsPage() {
+export default async function KeywordsPage() {
+  const repository = getAdConsoleRepository(createAdConsoleRequestContext());
+  const keywords = await repository.listKeywords();
   const sorted = [...keywords].sort((a, b) => b.volume - a.volume);
 
   return (

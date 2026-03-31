@@ -13,55 +13,17 @@ import {
 } from "@/components/ui/table";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { MoreVertical, ChevronLeft, ChevronRight } from "lucide-react";
-
-const stitchCampaigns = [
-  {
-    id: "stitch-1",
-    name: "Promo Medalla Light",
-    advertiserName: "Medalla Light",
-    totalImpressions: 4200,
-    ctr: 5.1,
-    status: "active" as const,
-  },
-  {
-    id: "stitch-2",
-    name: "Sabor de Goya",
-    advertiserName: "Goya Foods PR",
-    totalImpressions: 3800,
-    ctr: 4.8,
-    status: "active" as const,
-  },
-  {
-    id: "stitch-3",
-    name: "Pan Pepin Fresco",
-    advertiserName: "Pan Pepin",
-    totalImpressions: 3100,
-    ctr: 4.2,
-    status: "active" as const,
-  },
-  {
-    id: "stitch-4",
-    name: "Walmart Ofertas Semanales",
-    advertiserName: "Walmart PR",
-    totalImpressions: 2900,
-    ctr: 3.9,
-    status: "active" as const,
-  },
-  {
-    id: "stitch-5",
-    name: "Plaza Aniversario",
-    advertiserName: "Plaza Las Americas",
-    totalImpressions: 2500,
-    ctr: 4.5,
-    status: "active" as const,
-  },
-];
+import type { DashboardTopCampaign } from "@/lib/adconsole/repository";
 
 function formatImpressions(value: number): string {
   return value >= 1000 ? `${(value / 1000).toFixed(1)}K` : value.toString();
 }
 
-export function TopCampaignsTable() {
+interface TopCampaignsTableProps {
+  campaigns: DashboardTopCampaign[];
+}
+
+export function TopCampaignsTable({ campaigns }: TopCampaignsTableProps) {
   return (
     <Card className="rounded-xl border-slate-100 shadow-sm">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -100,7 +62,7 @@ export function TopCampaignsTable() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {stitchCampaigns.map((campaign) => (
+            {campaigns.map((campaign) => (
               <TableRow key={campaign.id} className="hover:bg-muted/50">
                 <TableCell className="font-medium text-sm">
                   {campaign.name}
@@ -130,7 +92,7 @@ export function TopCampaignsTable() {
         {/* Pagination footer */}
         <div className="flex items-center justify-between pt-4 border-t mt-4">
           <span className="text-sm text-muted-foreground">
-            Mostrando 5 de 9 campanas activas
+            Mostrando {campaigns.length} de {campaigns.length} campanas activas
           </span>
           <div className="flex items-center gap-1">
             <Button variant="outline" size="sm" className="h-8 w-8 p-0" disabled>

@@ -11,10 +11,14 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { revenueData } from "@/lib/mock-data";
+import type { RevenueDataPoint } from "@/lib/types";
 
-export function RevenueChart() {
-  const formattedData = revenueData.map((d) => ({
+interface RevenueChartProps {
+  data: RevenueDataPoint[];
+}
+
+export function RevenueChart({ data }: RevenueChartProps) {
+  const formattedData = data.map((d) => ({
     ...d,
     dateLabel: new Date(d.date).toLocaleDateString("es", {
       day: "numeric",

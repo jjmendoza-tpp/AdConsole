@@ -1,5 +1,3 @@
-"use client";
-
 import Link from "next/link";
 import { Plus, Search, SlidersHorizontal, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -15,8 +13,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { StatusBadge } from "@/components/shared/status-badge";
-import { campaigns } from "@/lib/mock-data";
-import type { CampaignStatus } from "@/lib/types";
+import { IntegrationState } from "@/components/shared/integration-state";
+import { createAdConsoleRequestContext } from "@/lib/adconsole/config";
+import { getAdConsoleErrorState } from "@/lib/adconsole/errors";
+import { getAdConsoleRepository } from "@/lib/adconsole/repository";
+import type { Campaign, CampaignStatus } from "@/lib/types";
 
 const statusTabs: { value: string; label: string }[] = [
   { value: "all", label: "Todas" },
@@ -30,7 +31,13 @@ function formatCurrency(cents: number): string {
   return `$${(cents / 100).toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 }
 
-function CampaignsTable({ status }: { status: string }) {
+function CampaignsTable({
+  status,
+  campaigns,
+}: {
+  status: string;
+  campaigns: Campaign[];
+}) {
   const filtered =
     status === "all"
       ? campaigns
@@ -89,7 +96,54 @@ function CampaignsTable({ status }: { status: string }) {
   );
 }
 
-export default function CampaignsPage() {
+type CampaignsPageState =
+  | {
+      kind: "ready";
+      campaigns: Campaign[];
+    }
+  | {
+      kind: "state";
+      variant: "empty" | "unauthorized" | "tenantMissing" | "upstreamError";
+    };
+
+async function loadCampaignsPageState(): Promise<CampaignsPageState> {
+  try {
+    const repository = getAdConsoleRepository(createAdConsoleRequestContext());
+    const campaigns = await repository.listCampaigns();
+
+    if (campaigns.length === 0) {
+      return { kind: "state", variant: "empty" };
+    }
+
+    return { kind: "ready", campaigns };
+  } catch (error) {
+    const errorState = getAdConsoleErrorState(error);
+
+    if (errorState) {
+      return { kind: "state", variant: errorState };
+    }
+
+    throw error;
+  }
+}
+
+export default async function CampaignsPage() {
+  const state = await loadCampaignsPageState();
+
+  if (state.kind === "state") {
+    return state.variant === "empty" ? (
+      <IntegrationState
+        variant="empty"
+        actionHref="/campaigns/new"
+        actionLabel="Crear campaña"
+      />
+    ) : (
+      <IntegrationState variant={state.variant} />
+    );
+  }
+
+  const { campaigns } = state;
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -137,13 +191,13 @@ export default function CampaignsPage() {
           </div>
           {statusTabs.map((tab) => (
             <TabsContent key={tab.value} value={tab.value} className="mt-0">
-              <CampaignsTable status={tab.value} />
+              <CampaignsTable status={tab.value} campaigns={campaigns} />
             </TabsContent>
           ))}
         </Tabs>
         <div className="flex justify-between items-center border-t px-4 py-3">
           <p className="text-sm text-muted-foreground">
-            Mostrando <span className="font-bold text-foreground">10</span> de <span className="font-bold text-foreground">124</span> campañas
+            Mostrando <span className="font-bold text-foreground">{campaigns.length}</span> de <span className="font-bold text-foreground">{campaigns.length}</span> campañas
           </p>
           <div className="flex items-center gap-1">
             <Button size="sm" className="h-8 w-8 p-0">1</Button>

@@ -9,15 +9,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { advertisers, adSpaces } from "@/lib/mock-data";
+import type { AdSpace, Advertiser } from "@/lib/types";
 import type { WizardData } from "../wizard-shell";
 
 interface StepBasicInfoProps {
+  adSpaces: AdSpace[];
+  advertisers: Advertiser[];
   data: WizardData;
   onChange: (partial: Partial<WizardData>) => void;
 }
 
-export function StepBasicInfo({ data, onChange }: StepBasicInfoProps) {
+export function StepBasicInfo({
+  adSpaces,
+  advertisers,
+  data,
+  onChange,
+}: StepBasicInfoProps) {
   return (
     <div className="space-y-6">
       <div>

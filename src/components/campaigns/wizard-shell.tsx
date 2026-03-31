@@ -10,7 +10,7 @@ import { StepTargeting } from "./steps/step-targeting";
 import { StepBudget } from "./steps/step-budget";
 import { StepCreative } from "./steps/step-creative";
 import { StepReview } from "./steps/step-review";
-import type { Channel, Intent } from "@/lib/types";
+import type { AdSpace, Advertiser, Channel, Intent } from "@/lib/types";
 
 export interface WizardData {
   // Step 1 — Basic Info
@@ -60,10 +60,26 @@ const steps = [
   { number: 5, title: "Revisión", description: "Confirmar y lanzar" },
 ];
 
-export function WizardShell() {
+interface WizardShellProps {
+  advertisers: Advertiser[];
+  adSpaces: AdSpace[];
+}
+
+function formatCurrency(cents: number): string {
+  return `$${(cents / 100).toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+}
+
+export function WizardShell({ advertisers, adSpaces }: WizardShellProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [data, setData] = useState<WizardData>(initialData);
   const [launched, setLaunched] = useState(false);
+  const estimatedReach =
+    data.totalBudgetCents > 0 && data.costPerImpressionCents > 0
+      ? Math.floor(data.totalBudgetCents / data.costPerImpressionCents)
+      : 0;
 
   function updateData(partial: Partial<WizardData>) {
     setData((prev) => ({ ...prev, ...partial }));
@@ -109,11 +125,15 @@ export function WizardShell() {
           </Card>
           <Card className="p-4 text-center">
             <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Presupuesto Diario</p>
-            <p className="text-sm font-bold tabular-nums mt-1">$250.00</p>
+            <p className="text-sm font-bold tabular-nums mt-1">
+              {formatCurrency(data.dailyBudgetCents)}
+            </p>
           </Card>
           <Card className="p-4 text-center">
             <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Audiencia Est.</p>
-            <p className="text-sm font-bold tabular-nums mt-1">1.2M+</p>
+            <p className="text-sm font-bold tabular-nums mt-1">
+              {estimatedReach.toLocaleString()}
+            </p>
           </Card>
         </div>
         <div className="flex gap-3 animate-in fade-in duration-500 delay-500">
@@ -202,7 +222,12 @@ export function WizardShell() {
       {/* Step Content */}
       <Card className="p-6">
         {currentStep === 1 && (
-          <StepBasicInfo data={data} onChange={updateData} />
+          <StepBasicInfo
+            adSpaces={adSpaces}
+            advertisers={advertisers}
+            data={data}
+            onChange={updateData}
+          />
         )}
         {currentStep === 2 && (
           <StepTargeting data={data} onChange={updateData} />
@@ -214,7 +239,7 @@ export function WizardShell() {
           <StepCreative data={data} onChange={updateData} />
         )}
         {currentStep === 5 && (
-          <StepReview data={data} />
+          <StepReview adSpaces={adSpaces} advertisers={advertisers} data={data} />
         )}
 
         {/* Navigation */}

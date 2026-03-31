@@ -65,7 +65,7 @@ export default function SettingsPage() {
           <div className="space-y-2">
             <Label>API Key (Producción)</Label>
             <div className="flex gap-2">
-              <Input defaultValue="prod-key-hidden-ending-3f7a" disabled className="font-mono text-sm" />
+              <Input defaultValue="managed-upstream-in-flamerly" disabled className="font-mono text-sm" />
               <Button variant="outline" size="icon">
                 <Copy className="h-4 w-4" />
               </Button>

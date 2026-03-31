@@ -1,5 +1,3 @@
-"use client";
-
 import Link from "next/link";
 import { Plus, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -14,7 +12,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { advertisers } from "@/lib/mock-data";
+import { createAdConsoleRequestContext } from "@/lib/adconsole/config";
+import { getAdConsoleRepository } from "@/lib/adconsole/repository";
 
 function formatCurrency(cents: number): string {
   return `$${(cents / 100).toLocaleString("en-US", { minimumFractionDigits: 0 })}`;
@@ -26,7 +25,10 @@ const statusConfig: Record<string, { label: string; className: string }> = {
   suspended: { label: "Suspendido", className: "bg-red-100 text-red-700 border-red-200" },
 };
 
-export default function AdvertisersPage() {
+export default async function AdvertisersPage() {
+  const repository = getAdConsoleRepository(createAdConsoleRequestContext());
+  const advertisers = await repository.listAdvertisers();
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">

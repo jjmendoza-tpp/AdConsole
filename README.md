@@ -1,81 +1,126 @@
-# Ad Console Prototype
+# adconsole
 
-Reference frontend for the Ad Console prototype published on Vercel.
+Frontend de referencia del prototipo de Ad Console desplegado en Vercel y preparado para futura integración con Flamerly.
 
-## Current status
+## Qué es este repo
 
-- Production alias: `https://prototype-two-dun.vercel.app`
-- Current exact deployment: `https://prototype-5au1czrdw-jjmendoza-1028s-projects.vercel.app`
-- Current production-facing refinement commit: `ae59335ed23309af9b2f00bbd1e2ee6fcf0bdedf`
-- Historical deployed baseline commit: `43496e7d6103fc0d4725550ac0e62694d400bff2`
+- Prototipo frontend de alta fidelidad para revisión interna DEV/CTO/product/design.
+- Implementación Next.js App Router + shadcn, sin backend propio.
+- Capa de datos desacoplada y plugin-ready, pensada para reemplazar el mock por consumo de `/api/ads/v1/*` dentro de Flamerly.
 
-## Branches
+## Estado actual
 
-- `main`: production-ready prototype state and current source of truth for Vercel
-- `codex/stitch-followup`: local follow-up work after the original deployed baseline
-- `import/vercel-baseline`: sanitized baseline imported when the GitHub repo already had history
-- `import/local-followup`: imported branch preserving post-baseline exploration
+- Nombre canónico local del proyecto: `adconsole`
+- Proyecto real en Vercel: `adconsole`
+- `main` representa el estado técnico de referencia del prototipo
+- El frontend sigue usando datos mock a través de `src/lib/adconsole/*`
+- No existen `route.ts`, `middleware` ni auth propia en este repo
+- La documentación operativa compartible vive en `docs/`
 
-The original production deployment corresponds to commit `43496e7d6103fc0d4725550ac0e62694d400bff2`.
+Contexto histórico de deploy:
 
-The repository first preserved that baseline in sanitized form so it could be shared safely. Since then, `main` has advanced to become the production-ready reference branch for the current Stitch-aligned prototype.
+- Alias histórico de producción observado: `https://prototype-two-dun.vercel.app`
+- Deployment exacto de referencia observado: `https://prototype-5au1czrdw-jjmendoza-1028s-projects.vercel.app`
+- Commit de referencia productiva observado: `ae59335ed23309af9b2f00bbd1e2ee6fcf0bdedf`
 
-## Design source of truth
+## Arquitectura
 
-Use these sources in this order:
+- Este repo es solo frontend.
+- La arquitectura objetivo del producto exige que Ad Console viva como plugin dentro de Flamerly.
+- La ruta de integración futura del frontend es:
+  - auth heredada de Flamerly
+  - contexto multi-tenant heredado de Flamerly
+  - endpoints REST en `/api/ads/v1/*`
+  - Lumen tratado como integración externa, no como backend embebido aquí
 
-1. `/Users/josejuanmendoza/Documents/Prometheus/01_PRODUCTOS/Ad_Console/diseno/stitch_ad_console_shop.pr`
-2. `/Users/josejuanmendoza/Documents/Prometheus/01_PRODUCTOS/Ad_Console/diseno/DESIGN_SYSTEM.md`
-3. `/Users/josejuanmendoza/Documents/Prometheus/01_PRODUCTOS/Ad_Console/diseno/PANTALLAS.md`
-4. Figma and Stitch MCP, if available in the current session
+La frontera de datos actual está en:
 
-When Stitch MCP is unavailable, the local export under `diseno/stitch_ad_console_shop.pr/` is the mandatory fallback.
+- `src/lib/adconsole/config.ts`
+- `src/lib/adconsole/repository.ts`
+- `src/lib/adconsole/mock-repository.ts`
 
-## Getting Started
+La UI no debe importar `@/lib/mock-data` directamente. El mock solo vive detrás del repositorio.
+
+## Documentación del repo
+
+- `docs/SETUP.md`
+- `docs/ARCHITECTURE.md`
+- `docs/FLAMERLY_INTEGRATION.md`
+- `docs/QA_CHECKLIST.md`
+- `docs/EXECUTION_PLAN.md`
+- `docs/STATUS.md`
+
+## Fuente de verdad
+
+- La fuente de verdad de negocio y diseño vive fuera de este repo compartido.
+- Este repositorio contiene únicamente el contexto técnico necesario para ejecutar, revisar y endurecer el prototipo.
+- Si un dev necesita contrastar decisiones de producto con material interno, debe solicitar acceso al owner del producto en lugar de depender de rutas locales de otra máquina.
+
+## Desarrollo local
 
 ```bash
+git clone <repo-url>
+cd ad_console_prototype
 npm install
 npm run dev
 ```
 
-Open `http://localhost:3000`.
+Abrir `http://localhost:3000`.
 
-## Validation
+## Validación
 
 ```bash
 npm run lint
 npm run build
 ```
 
-`npm run build` may emit Recharts static-generation width/height warnings during prerender. They are known non-blocking warnings for this prototype.
+Para la secuencia de revisión técnica completa, ver `docs/QA_CHECKLIST.md`.
 
-If local `next build` hangs:
+`npm run build` puede emitir warnings conocidos de Recharts durante prerender por tamaños `width(-1)` o `height(-1)`. Hoy se consideran no bloqueantes mientras el build complete correctamente.
 
-- check for lingering `next build`, `eslint`, or `.next/build/postcss.js` processes
-- kill orphaned workers before retrying
-- rely on the Vercel remote build as the final release gate when the local machine is unstable
+## Qué sigue siendo mock
 
-## Deploy
+- Dashboard KPIs y revenue
+- Analytics operativos
+- Listados y detalles de campañas
+- Listados y detalles de anunciantes
+- Espacios publicitarios
+- Keywords
+- Wizard de creación de campañas
 
-Preferred production paths:
+## Qué falta para implementación real
 
-1. Push the validated commit to GitHub `main`
-2. Confirm that Vercel creates a new deployment for `main`
-3. If the Git-triggered deployment is canceled, use:
+- Cliente REST real hacia Flamerly `/api/ads/v1/*`
+- Sesión heredada de Flamerly
+- Tenant context real
+- Persistencia real de formularios y acciones
+- Hardening de permisos/roles según Flamerly
 
-```bash
-npx vercel --prod
-```
+## Matriz de compatibilidad
 
-Then verify:
+| Ya compatible | Compatible tras este refactor | Fuera de alcance del prototipo |
+| --- | --- | --- |
+| Dominio base con tipos de campañas, anunciantes, espacios y tenant | Reemplazo del mock por repositorio REST a Flamerly sin reescribir vistas | Backend/plugin dentro de Flamerly |
+| Frontend separado en Vercel | Auth y multi-tenant heredados vía capa de datos | API routes internas de Next.js en este repo |
+| UX/UI actual preservada | Integración con `/api/ads/v1/*` | Persistencia real y workflows comerciales |
+| Shell y navegación del prototipo | Migración gradual del mock a datos reales por método | Seguridad operativa del backend de Flamerly |
 
-- production alias resolves correctly
-- the served HTML contains the expected shell/dashboard markers
-- the first visible viewport actually matches the intended Stitch reference
+## Checklist DEV/CTO
 
-## Notes
+- `git status` sin basura local
+- `npm run lint`
+- `npm run build`
+- sin imports directos a `@/lib/mock-data` en `src`
+- naming homologado a `adconsole`
+- README coherente con GitHub, Vercel y arquitectura de producto
+- sin backend ni auth propios agregados en este repo
 
-- The repo is intended as a reusable reference for code-generation tools and future prototype iterations.
-- Local-only folders such as `.claude/`, `.gstack/`, `.next/`, `node_modules/`, and `.vercel/` are excluded from Git history.
-- Preserve the current Next.js/shadcn architecture. Do not replace the shell or component system unless the user explicitly asks for an architectural change.
-- The most important visual QA area is the dashboard first fold: sidebar, top header, KPI cards, revenue chart, donut card, and top campaigns table.
+## Notas operativas
+
+- `.claude/`, `.gstack/`, `.next/`, `.vercel/` y `node_modules/` son artefactos locales.
+- `EXECUTION_HANDOFF.md` puede mantenerse localmente como documento operativo, pero no forma parte del repo compartido.
+- La zona más sensible de QA visual sigue siendo el primer fold del dashboard: sidebar, top header, KPI cards, revenue chart, breakdown y tabla principal.
+- Para compartir el prototipo:
+  - usar el repo Git como fuente técnica oficial
+  - usar el deployment de Vercel como referencia visual y de QA
+  - no usar `.zip` como vía principal de colaboración
