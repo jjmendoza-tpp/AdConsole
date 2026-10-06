@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { Search, Bell, HelpCircle } from "lucide-react";
+import { Search, Bell, HelpCircle, ShieldCheck, UserRound } from "lucide-react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import { useAdConsoleApp } from "@/components/shell/adconsole-app-provider";
 
 const routeLabels: Record<string, string> = {
   "/": "Dashboard",
@@ -29,6 +30,14 @@ const routeLabels: Record<string, string> = {
 
 export function TopHeader() {
   const pathname = usePathname();
+  const {
+    notificationsOpen,
+    openHelp,
+    openNotifications,
+    openSearch,
+    unreadNotificationsCount,
+    viewMode,
+  } = useAdConsoleApp();
 
   const segments = pathname.split("/").filter(Boolean);
   const currentLabel = routeLabels[pathname] || segments[segments.length - 1] || "Dashboard";
@@ -63,26 +72,53 @@ export function TopHeader() {
       </div>
 
       <div className="ml-auto flex items-center gap-3">
-        <div className="relative hidden sm:block">
+        <button
+          type="button"
+          onClick={openSearch}
+          className="relative hidden sm:block"
+        >
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <Input
+            readOnly
             placeholder="Buscar..."
             className="h-9 w-64 rounded-lg border-none bg-slate-100/60 pl-10 text-sm focus-visible:border-primary/20 focus-visible:ring-3 focus-visible:ring-primary/15"
           />
-        </div>
+        </button>
 
         <div className="hidden items-center gap-2 rounded-full border border-green-100 bg-green-50 px-3 py-1 text-xs font-semibold text-green-600 md:flex">
           <span className="h-2 w-2 rounded-full bg-green-500 status-dot-pulse" />
           Estado: Activo
         </div>
 
-        <Button variant="ghost" size="icon-sm" className="relative text-slate-500 hover:text-primary">
+        <div className="hidden items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600 lg:flex">
+          {viewMode === "admin" ? (
+            <ShieldCheck className="h-3.5 w-3.5 text-primary" />
+          ) : (
+            <UserRound className="h-3.5 w-3.5 text-primary" />
+          )}
+          {viewMode === "admin" ? "Admin" : "Usuario"}
+        </div>
+
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          onClick={openNotifications}
+          className="relative text-slate-500 hover:text-primary"
+          aria-pressed={notificationsOpen}
+        >
           <Bell className="h-4 w-4" />
-          <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full border-2 border-white bg-[#EF4444] text-[10px] font-bold text-white">
-            3
-          </span>
+          {unreadNotificationsCount > 0 && (
+            <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full border-2 border-white bg-[#EF4444] px-0.5 text-[10px] font-bold text-white">
+              {Math.min(unreadNotificationsCount, 9)}
+            </span>
+          )}
         </Button>
-        <Button variant="ghost" size="icon-sm" className="text-slate-500 hover:text-primary">
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          onClick={() => openHelp()}
+          className="text-slate-500 hover:text-primary"
+        >
           <HelpCircle className="h-4 w-4" />
         </Button>
       </div>

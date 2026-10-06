@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { Check, Shield, Sparkles, CloudUpload } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,47 +11,14 @@ import { StepTargeting } from "./steps/step-targeting";
 import { StepBudget } from "./steps/step-budget";
 import { StepCreative } from "./steps/step-creative";
 import { StepReview } from "./steps/step-review";
+import { useAdConsoleApp } from "@/components/shell/adconsole-app-provider";
+import {
+  defaultCampaignComposerData,
+  type CampaignComposerData,
+} from "@/lib/adconsole/demo-runtime";
 import type { AdSpace, Advertiser, Channel, Intent } from "@/lib/types";
 
-export interface WizardData {
-  // Step 1 — Basic Info
-  name: string;
-  advertiserId: string;
-  adSpaceId: string;
-  startDate: string;
-  endDate: string;
-  // Step 2 — Targeting
-  keywords: string[];
-  intents: Intent[];
-  channels: Channel[];
-  // Step 3 — Budget
-  dailyBudgetCents: number;
-  totalBudgetCents: number;
-  priority: number;
-  costPerImpressionCents: number;
-  // Step 4 — Creative
-  messageTemplate: string;
-  ctaUrl: string;
-  buttonText: string;
-}
-
-const initialData: WizardData = {
-  name: "",
-  advertiserId: "",
-  adSpaceId: "",
-  startDate: "",
-  endDate: "",
-  keywords: [],
-  intents: [],
-  channels: [],
-  dailyBudgetCents: 15000,
-  totalBudgetCents: 300000,
-  priority: 50,
-  costPerImpressionCents: 12,
-  messageTemplate: "",
-  ctaUrl: "",
-  buttonText: "Ver oferta",
-};
+export interface WizardData extends CampaignComposerData {}
 
 const steps = [
   { number: 1, title: "Info Básica", description: "Nombre, anunciante y fechas" },
@@ -73,9 +41,17 @@ function formatCurrency(cents: number): string {
 }
 
 export function WizardShell({ advertisers, adSpaces }: WizardShellProps) {
+  const { getViewHref, launchCampaign, saveCampaignDraft } = useAdConsoleApp();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const advertiserPrefill = searchParams.get("advertiserId");
   const [currentStep, setCurrentStep] = useState(1);
-  const [data, setData] = useState<WizardData>(initialData);
+  const [data, setData] = useState<WizardData>({
+    ...defaultCampaignComposerData,
+    advertiserId: advertiserPrefill ?? defaultCampaignComposerData.advertiserId,
+  });
   const [launched, setLaunched] = useState(false);
+  const [draftCampaignId, setDraftCampaignId] = useState<string | null>(null);
   const estimatedReach =
     data.totalBudgetCents > 0 && data.costPerImpressionCents > 0
       ? Math.floor(data.totalBudgetCents / data.costPerImpressionCents)
@@ -94,6 +70,8 @@ export function WizardShell({ advertisers, adSpaces }: WizardShellProps) {
   }
 
   function handleLaunch() {
+    const campaign = launchCampaign(data, draftCampaignId ?? undefined);
+    setDraftCampaignId(campaign.id);
     setLaunched(true);
   }
 
@@ -137,10 +115,21 @@ export function WizardShell({ advertisers, adSpaces }: WizardShellProps) {
           </Card>
         </div>
         <div className="flex gap-3 animate-in fade-in duration-500 delay-500">
-          <Button variant="outline" onClick={() => { setLaunched(false); setCurrentStep(1); setData(initialData); }}>
+          <Button variant="outline" onClick={() => {
+            setLaunched(false);
+            setCurrentStep(1);
+            setDraftCampaignId(null);
+            setData({
+              ...defaultCampaignComposerData,
+              advertiserId: advertiserPrefill ?? defaultCampaignComposerData.advertiserId,
+            });
+          }}>
             Crear otra campaña
           </Button>
-          <Button render={<Link href="/campaigns" />}>
+          <Button render={<Link href={getViewHref(`/campaigns/${draftCampaignId ?? ""}`)} />}>
+            Ver detalle
+          </Button>
+          <Button variant="outline" render={<Link href={getViewHref("/campaigns")} />}>
             Ver campañas
           </Button>
         </div>
@@ -253,7 +242,14 @@ export function WizardShell({ advertisers, adSpaces }: WizardShellProps) {
           </Button>
           <div className="flex items-center gap-3">
             {currentStep === 3 && (
-              <Button variant="outline" size="sm">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const campaign = saveCampaignDraft(data, draftCampaignId ?? undefined);
+                  setDraftCampaignId(campaign.id);
+                }}
+              >
                 Guardar Borrador
               </Button>
             )}

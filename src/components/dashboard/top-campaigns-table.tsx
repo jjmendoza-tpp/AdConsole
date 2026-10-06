@@ -1,8 +1,15 @@
 "use client";
 
 import Link from "next/link";
+import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Table,
   TableBody,
@@ -13,6 +20,7 @@ import {
 } from "@/components/ui/table";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { MoreVertical, ChevronLeft, ChevronRight } from "lucide-react";
+import { useAdConsoleApp } from "@/components/shell/adconsole-app-provider";
 import type { DashboardTopCampaign } from "@/lib/adconsole/repository";
 
 function formatImpressions(value: number): string {
@@ -24,6 +32,31 @@ interface TopCampaignsTableProps {
 }
 
 export function TopCampaignsTable({ campaigns }: TopCampaignsTableProps) {
+  const { campaigns: runtimeCampaigns, getViewHref, hydrated, setCampaignStatus } = useAdConsoleApp();
+  const [page, setPage] = useState(1);
+  const dataset = useMemo(() => {
+    if (!hydrated) {
+      return campaigns;
+    }
+
+    return [...runtimeCampaigns]
+      .filter((campaign) => campaign.status === "active" || campaign.status === "paused")
+      .sort((left, right) => right.totalImpressions - left.totalImpressions)
+      .slice(0, 12)
+      .map((campaign) => ({
+        id: campaign.id,
+        name: campaign.name,
+        advertiserName: campaign.advertiserName,
+        totalImpressions: campaign.totalImpressions,
+        ctr: campaign.ctr,
+        status: campaign.status,
+      }));
+  }, [campaigns, hydrated, runtimeCampaigns]);
+  const pageSize = 5;
+  const totalPages = Math.max(1, Math.ceil(dataset.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const pageCampaigns = dataset.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
   return (
     <Card className="rounded-xl border-slate-100 shadow-sm">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -31,7 +64,7 @@ export function TopCampaignsTable({ campaigns }: TopCampaignsTableProps) {
           Top Campanas Activas
         </CardTitle>
         <Link
-          href="/campaigns"
+          href={getViewHref("/campaigns")}
           className="text-sm font-medium text-primary hover:underline"
         >
           Ver todas las campanas
@@ -62,7 +95,7 @@ export function TopCampaignsTable({ campaigns }: TopCampaignsTableProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {campaigns.map((campaign) => (
+            {pageCampaigns.map((campaign) => (
               <TableRow key={campaign.id} className="hover:bg-muted/50">
                 <TableCell className="font-medium text-sm">
                   {campaign.name}
@@ -80,9 +113,28 @@ export function TopCampaignsTable({ campaigns }: TopCampaignsTableProps) {
                   <StatusBadge status={campaign.status} />
                 </TableCell>
                 <TableCell className="text-right">
-                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                    <MoreVertical className="h-4 w-4" />
-                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger render={<Button variant="ghost" size="sm" className="h-8 w-8 p-0" />}>
+                      <MoreVertical className="h-4 w-4" />
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-40">
+                      <DropdownMenuItem>
+                        <Link href={getViewHref(`/campaigns/${campaign.id}`)} className="w-full">
+                          Ver detalle
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() =>
+                          setCampaignStatus(
+                            campaign.id,
+                            campaign.status === "active" ? "paused" : "active",
+                          )
+                        }
+                      >
+                        {campaign.status === "active" ? "Pausar" : "Reactivar"}
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </TableCell>
               </TableRow>
             ))}
@@ -92,13 +144,25 @@ export function TopCampaignsTable({ campaigns }: TopCampaignsTableProps) {
         {/* Pagination footer */}
         <div className="flex items-center justify-between pt-4 border-t mt-4">
           <span className="text-sm text-muted-foreground">
-            Mostrando {campaigns.length} de {campaigns.length} campanas activas
+            Mostrando {pageCampaigns.length} de {dataset.length} campanas activas
           </span>
           <div className="flex items-center gap-1">
-            <Button variant="outline" size="sm" className="h-8 w-8 p-0" disabled>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 w-8 p-0"
+              disabled={currentPage === 1}
+              onClick={() => setPage((value) => Math.max(1, value - 1))}
+            >
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <Button variant="outline" size="sm" className="h-8 w-8 p-0">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 w-8 p-0"
+              disabled={currentPage === totalPages}
+              onClick={() => setPage((value) => Math.min(totalPages, value + 1))}
+            >
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>

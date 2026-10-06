@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { useAdConsoleApp } from "@/components/shell/adconsole-app-provider";
 import type { AdSpace } from "@/lib/types";
 
 interface AdSpacesPageProps {
@@ -46,7 +47,10 @@ const channelLabels: Record<string, string> = {
 };
 
 export function AdSpacesPage({ adSpaces }: AdSpacesPageProps) {
+  const { adSpaces: runtimeAdSpaces, hydrated, openHelp, updateAdSpace } = useAdConsoleApp();
+  const spaces = hydrated ? runtimeAdSpaces : adSpaces;
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [drafts, setDrafts] = useState<Record<string, Partial<AdSpace>>>({});
 
   return (
     <div className="space-y-6">
@@ -59,10 +63,11 @@ export function AdSpacesPage({ adSpaces }: AdSpacesPageProps) {
       </div>
 
       <div className="grid gap-4">
-        {adSpaces.map((space) => {
+        {spaces.map((space) => {
           const typeConfig = spaceTypeLabels[space.spaceType] || spaceTypeLabels.product_recommendation;
           const TypeIcon = typeConfig.icon;
           const isEditing = editingId === space.id;
+          const draft = drafts[space.id] ?? {};
 
           return (
             <Card key={space.id} className={isEditing ? "border-primary/30" : ""}>
@@ -89,7 +94,9 @@ export function AdSpacesPage({ adSpaces }: AdSpacesPageProps) {
                     </span>
                     <Switch
                       checked={space.status === "active"}
-                      onCheckedChange={() => {}}
+                      onCheckedChange={(checked) =>
+                        updateAdSpace(space.id, { status: checked ? "active" : "inactive" })
+                      }
                     />
                     <Button
                       variant="outline"
@@ -150,28 +157,84 @@ export function AdSpacesPage({ adSpaces }: AdSpacesPageProps) {
                         <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                           Nombre del Espacio
                         </Label>
-                        <Input defaultValue={space.name} />
+                        <Input
+                          value={draft.name ?? space.name}
+                          onChange={(event) =>
+                            setDrafts((current) => ({
+                              ...current,
+                              [space.id]: {
+                                ...current[space.id],
+                                name: event.target.value,
+                              },
+                            }))
+                          }
+                        />
                         <p className="text-[10px] text-muted-foreground">Este nombre se mostrará en los reportes de anuncios.</p>
                       </div>
                       <div className="space-y-2">
                         <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                           Max Anuncios por Conversación
                         </Label>
-                        <Input type="number" defaultValue={space.maxAdsPerConversation} min={1} max={10} />
+                        <Input
+                          type="number"
+                          value={draft.maxAdsPerConversation ?? space.maxAdsPerConversation}
+                          min={1}
+                          max={10}
+                          onChange={(event) =>
+                            setDrafts((current) => ({
+                              ...current,
+                              [space.id]: {
+                                ...current[space.id],
+                                maxAdsPerConversation: Number(event.target.value),
+                              },
+                            }))
+                          }
+                        />
                       </div>
                       <div className="space-y-2">
                         <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                           Cooldown (Minutos)
                         </Label>
-                        <Input type="number" defaultValue={space.cooldownMinutes} min={1} max={1440} />
+                        <Input
+                          type="number"
+                          value={draft.cooldownMinutes ?? space.cooldownMinutes}
+                          min={1}
+                          max={1440}
+                          onChange={(event) =>
+                            setDrafts((current) => ({
+                              ...current,
+                              [space.id]: {
+                                ...current[space.id],
+                                cooldownMinutes: Number(event.target.value),
+                              },
+                            }))
+                          }
+                        />
                         <p className="text-[10px] text-muted-foreground">Tiempo mínimo antes de repetir la recomendación.</p>
                       </div>
                     </div>
                     <div className="flex justify-end gap-2">
-                      <Button variant="outline" size="sm" onClick={() => setEditingId(null)}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setEditingId(null);
+                          setDrafts((current) => {
+                            const next = { ...current };
+                            delete next[space.id];
+                            return next;
+                          });
+                        }}
+                      >
                         Cancelar
                       </Button>
-                      <Button size="sm" onClick={() => setEditingId(null)}>
+                      <Button
+                        size="sm"
+                        onClick={() => {
+                          updateAdSpace(space.id, drafts[space.id] ?? {});
+                          setEditingId(null);
+                        }}
+                      >
                         Guardar Cambios
                       </Button>
                     </div>
@@ -220,9 +283,13 @@ export function AdSpacesPage({ adSpaces }: AdSpacesPageProps) {
               <p className="text-xs text-muted-foreground mt-1">
                 Prometheus está ajustando los pujas para este espacio basándose en el historial de las últimas 24h.
               </p>
-              <a href="#" className="text-xs text-primary font-medium mt-2 inline-block hover:underline">
+              <button
+                type="button"
+                onClick={() => openHelp("/analytics")}
+                className="text-xs text-primary font-medium mt-2 inline-block hover:underline"
+              >
                 VER REPORTES IA
-              </a>
+              </button>
             </div>
           </div>
         </Card>
@@ -244,8 +311,12 @@ export function AdSpacesPage({ adSpaces }: AdSpacesPageProps) {
       <div className="flex items-center justify-between text-xs text-muted-foreground border-t pt-4">
         <p>Prometheus Digital Services - Shop.PR Console v1.4.2</p>
         <div className="flex items-center gap-4">
-          <a href="#" className="hover:underline">Documentación de API</a>
-          <a href="#" className="hover:underline">Centro de Ayuda</a>
+          <button type="button" className="hover:underline" onClick={() => openHelp("/ad-spaces")}>
+            Documentación de API
+          </button>
+          <button type="button" className="hover:underline" onClick={() => openHelp()}>
+            Centro de Ayuda
+          </button>
         </div>
       </div>
     </div>

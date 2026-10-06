@@ -1,5 +1,7 @@
+import { redirect } from "next/navigation";
 import { AdSpacesPage } from "@/components/ad-spaces/ad-spaces-page";
 import { IntegrationState } from "@/components/shared/integration-state";
+import { buildViewHref } from "@/lib/adconsole/demo-runtime";
 import { getAdConsoleErrorState } from "@/lib/adconsole/errors";
 import { getAdConsoleRepository } from "@/lib/adconsole/repository";
 import { getServerAdConsoleRequestContext } from "@/lib/adconsole/server-context";
@@ -38,7 +40,20 @@ async function loadAdSpacesRoutePageState(): Promise<AdSpacesRoutePageState> {
   }
 }
 
-export default async function AdSpacesRoutePage() {
+export default async function AdSpacesRoutePage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const resolvedSearchParams = await searchParams;
+  const context = await getServerAdConsoleRequestContext({
+    requestedViewMode: resolvedSearchParams.view,
+  });
+
+  if (context.viewMode === "user") {
+    redirect(buildViewHref("/", "user"));
+  }
+
   const state = await loadAdSpacesRoutePageState();
 
   if (state.kind === "state") {

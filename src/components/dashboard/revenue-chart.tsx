@@ -1,7 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   AreaChart,
   Area,
@@ -11,6 +13,8 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { Download } from "lucide-react";
+import { useAdConsoleApp } from "@/components/shell/adconsole-app-provider";
 import type { RevenueDataPoint } from "@/lib/types";
 
 interface RevenueChartProps {
@@ -18,6 +22,8 @@ interface RevenueChartProps {
 }
 
 export function RevenueChart({ data }: RevenueChartProps) {
+  const { downloadCsv } = useAdConsoleApp();
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const formattedData = data.map((d) => ({
     ...d,
     dateLabel: new Date(d.date).toLocaleDateString("es", {
@@ -37,6 +43,17 @@ export function RevenueChart({ data }: RevenueChartProps) {
             variant="outline"
             size="sm"
             className="h-8 rounded-md border-transparent bg-slate-100 px-3 text-xs font-semibold text-slate-600 hover:bg-slate-200"
+            onClick={() =>
+              downloadCsv(
+                "dashboard-revenue.csv",
+                data.map((point) => ({
+                  date: point.date,
+                  revenue: point.revenue,
+                  impressions: point.impressions,
+                  clicks: point.clicks,
+                })),
+              )
+            }
           >
             Exportar
           </Button>
@@ -44,6 +61,7 @@ export function RevenueChart({ data }: RevenueChartProps) {
             variant="outline"
             size="sm"
             className="h-8 rounded-md border-transparent bg-[#EBF0FF] px-3 text-xs font-semibold text-primary hover:bg-[#dfe7ff]"
+            onClick={() => setDetailsOpen(true)}
           >
             Detalles
           </Button>
@@ -106,6 +124,44 @@ export function RevenueChart({ data }: RevenueChartProps) {
           </ResponsiveContainer>
         </div>
       </CardContent>
+      <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
+        <DialogContent showCloseButton={false}>
+          <DialogHeader>
+            <DialogTitle>Detalle de revenue</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2 text-sm">
+            <p className="text-muted-foreground">
+              Resumen ejecutivo de los últimos 30 días para uso comercial y operativo.
+            </p>
+            <div className="rounded-lg border bg-muted/20 p-4">
+              <p>Revenue acumulado: ${data.reduce((sum, point) => sum + point.revenue, 0).toLocaleString()}</p>
+              <p>Impresiones acumuladas: {data.reduce((sum, point) => sum + point.impressions, 0).toLocaleString()}</p>
+              <p>Clicks acumulados: {data.reduce((sum, point) => sum + point.clicks, 0).toLocaleString()}</p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDetailsOpen(false)}>
+              Cerrar
+            </Button>
+            <Button
+              onClick={() =>
+                downloadCsv(
+                  "dashboard-revenue-detail.csv",
+                  data.map((point) => ({
+                    date: point.date,
+                    revenue: point.revenue,
+                    impressions: point.impressions,
+                    clicks: point.clicks,
+                  })),
+                )
+              }
+            >
+              <Download className="mr-2 h-4 w-4" />
+              Exportar CSV
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }

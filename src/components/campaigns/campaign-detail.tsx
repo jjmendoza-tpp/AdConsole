@@ -1,10 +1,15 @@
 "use client";
 
 import Link from "next/link";
+import { useMemo, useState } from "react";
 import { ArrowLeft, Pause, Play, Calendar, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { StatusBadge } from "@/components/shared/status-badge";
 import {
   AreaChart,
@@ -16,10 +21,12 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { buildCampaignPerformanceSeries } from "@/lib/adconsole/demo-fixtures";
+import { useAdConsoleApp } from "@/components/shell/adconsole-app-provider";
 import type { Campaign, CampaignStatus } from "@/lib/types";
 
 interface CampaignDetailProps {
-  campaign: Campaign;
+  campaignId: string;
+  initialCampaigns: Campaign[];
 }
 
 function formatCurrency(cents: number): string {
@@ -40,7 +47,40 @@ const intentLabels: Record<string, string> = {
   general_info: "Información general",
 };
 
-export function CampaignDetail({ campaign }: CampaignDetailProps) {
+export function CampaignDetail({ campaignId, initialCampaigns }: CampaignDetailProps) {
+  const {
+    campaigns: runtimeCampaigns,
+    getViewHref,
+    hydrated,
+    setCampaignStatus,
+    updateCampaign,
+  } = useAdConsoleApp();
+  const campaigns = hydrated ? runtimeCampaigns : initialCampaigns;
+  const campaign = campaigns.find((item) => item.id === campaignId);
+  const [editOpen, setEditOpen] = useState(false);
+  const [draft, setDraft] = useState<Partial<Campaign>>({});
+
+  const seedCampaign = initialCampaigns.find((item) => item.id === campaignId);
+
+  if (!campaign && !hydrated && !seedCampaign) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-4 py-20">
+        <h2 className="text-xl font-semibold">Cargando campaña...</h2>
+      </div>
+    );
+  }
+
+  if (!campaign) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-4 py-20">
+        <h2 className="text-xl font-semibold">Campaña no encontrada</h2>
+        <Button render={<Link href={getViewHref("/campaigns")} />} variant="outline">
+          Volver a campañas
+        </Button>
+      </div>
+    );
+  }
+
   const performanceData = buildCampaignPerformanceSeries(
     campaign.totalImpressions,
     campaign.totalClicks,
@@ -48,12 +88,19 @@ export function CampaignDetail({ campaign }: CampaignDetailProps) {
   const budgetPercent = campaign.totalBudgetCents > 0
     ? Math.round((campaign.spentCents / campaign.totalBudgetCents) * 100)
     : 0;
+  const nextStatus = campaign.status === "active" ? "paused" : "active";
+
+  const editableSchedule = useMemo(() => ({
+    startDate: campaign.schedule.startDate,
+    endDate: campaign.schedule.endDate,
+  }), [campaign.schedule.endDate, campaign.schedule.startDate]);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-start justify-between">
+    <>
+      <div className="space-y-6">
+        <div className="flex items-start justify-between">
         <div className="flex items-start gap-4">
-          <Button render={<Link href="/campaigns" />} variant="outline" size="icon">
+          <Button render={<Link href={getViewHref("/campaigns")} />} variant="outline" size="icon">
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
@@ -69,18 +116,43 @@ export function CampaignDetail({ campaign }: CampaignDetailProps) {
           </div>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setDraft({
+                name: campaign.name,
+                dailyBudgetCents: campaign.dailyBudgetCents,
+                totalBudgetCents: campaign.totalBudgetCents,
+                messageTemplate: campaign.messageTemplate,
+                ctaUrl: campaign.ctaUrl,
+                creativeData: {
+                  buttonText: campaign.creativeData?.buttonText,
+                },
+                schedule: editableSchedule,
+              });
+              setEditOpen(true);
+            }}
+          >
             <Edit className="h-3.5 w-3.5 mr-1.5" />
             Editar
           </Button>
           {campaign.status === "active" && (
-            <Button variant="outline" size="sm">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCampaignStatus(campaign.id, "paused")}
+            >
               <Pause className="h-3.5 w-3.5 mr-1.5" />
               Pausar
             </Button>
           )}
           {campaign.status === "paused" && (
-            <Button variant="outline" size="sm">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCampaignStatus(campaign.id, "active")}
+            >
               <Play className="h-3.5 w-3.5 mr-1.5" />
               Reactivar
             </Button>
@@ -260,6 +332,147 @@ export function CampaignDetail({ campaign }: CampaignDetailProps) {
           </div>
         </CardContent>
       </Card>
-    </div>
+      </div>
+
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent className="max-w-xl" showCloseButton={false}>
+          <DialogHeader>
+            <DialogTitle>Editar campaña</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2 sm:col-span-2">
+              <Label htmlFor="campaign-name">Nombre</Label>
+              <Input
+                id="campaign-name"
+                value={draft.name ?? ""}
+                onChange={(event) =>
+                  setDraft((current) => ({ ...current, name: event.target.value }))
+                }
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="campaign-daily-budget">Budget diario (cents)</Label>
+              <Input
+                id="campaign-daily-budget"
+                type="number"
+                value={draft.dailyBudgetCents ?? 0}
+                onChange={(event) =>
+                  setDraft((current) => ({
+                    ...current,
+                    dailyBudgetCents: Number(event.target.value),
+                  }))
+                }
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="campaign-total-budget">Budget total (cents)</Label>
+              <Input
+                id="campaign-total-budget"
+                type="number"
+                value={draft.totalBudgetCents ?? 0}
+                onChange={(event) =>
+                  setDraft((current) => ({
+                    ...current,
+                    totalBudgetCents: Number(event.target.value),
+                  }))
+                }
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="campaign-start-date">Inicio</Label>
+              <Input
+                id="campaign-start-date"
+                type="date"
+                value={draft.schedule?.startDate ?? ""}
+                onChange={(event) =>
+                  setDraft((current) => ({
+                    ...current,
+                    schedule: {
+                      startDate: event.target.value,
+                      endDate: current.schedule?.endDate ?? campaign.schedule.endDate,
+                    },
+                  }))
+                }
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="campaign-end-date">Fin</Label>
+              <Input
+                id="campaign-end-date"
+                type="date"
+                value={draft.schedule?.endDate ?? ""}
+                onChange={(event) =>
+                  setDraft((current) => ({
+                    ...current,
+                    schedule: {
+                      startDate: current.schedule?.startDate ?? campaign.schedule.startDate,
+                      endDate: event.target.value,
+                    },
+                  }))
+                }
+              />
+            </div>
+            <div className="space-y-2 sm:col-span-2">
+              <Label htmlFor="campaign-message">Mensaje creativo</Label>
+              <Textarea
+                id="campaign-message"
+                value={draft.messageTemplate ?? ""}
+                onChange={(event) =>
+                  setDraft((current) => ({
+                    ...current,
+                    messageTemplate: event.target.value,
+                  }))
+                }
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="campaign-cta-url">CTA URL</Label>
+              <Input
+                id="campaign-cta-url"
+                value={draft.ctaUrl ?? ""}
+                onChange={(event) =>
+                  setDraft((current) => ({ ...current, ctaUrl: event.target.value }))
+                }
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="campaign-button-text">Texto del botón</Label>
+              <Input
+                id="campaign-button-text"
+                value={draft.creativeData?.buttonText ?? ""}
+                onChange={(event) =>
+                  setDraft((current) => ({
+                    ...current,
+                    creativeData: {
+                      ...current.creativeData,
+                      buttonText: event.target.value,
+                    },
+                  }))
+                }
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditOpen(false)}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={() => {
+                updateCampaign(campaign.id, draft);
+                setEditOpen(false);
+              }}
+            >
+              Guardar Cambios
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setCampaignStatus(campaign.id, nextStatus)}
+            >
+              {nextStatus === "active" ? "Reactivar" : "Pausar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

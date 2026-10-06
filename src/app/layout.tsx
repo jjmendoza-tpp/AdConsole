@@ -5,6 +5,8 @@ import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppSidebar } from "@/components/shell/app-sidebar";
 import { TopHeader } from "@/components/shell/top-header";
+import { AdConsoleAppProvider } from "@/components/shell/adconsole-app-provider";
+import { getServerAdConsoleRequestContext } from "@/lib/adconsole/server-context";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -21,28 +23,35 @@ export const metadata: Metadata = {
   description: "Plataforma SaaS de gestión de anuncios dentro de conversaciones AI",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const context = await getServerAdConsoleRequestContext();
+
   return (
     <html
       lang="es"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full">
-        <TooltipProvider>
-          <SidebarProvider>
-            <AppSidebar />
-            <SidebarInset>
-              <TopHeader />
-              <main className="flex-1 overflow-auto p-6">
-                {children}
-              </main>
-            </SidebarInset>
-          </SidebarProvider>
-        </TooltipProvider>
+        <AdConsoleAppProvider
+          defaultViewMode={context.viewMode}
+          dataSource={context.mode}
+        >
+          <TooltipProvider>
+            <SidebarProvider>
+              <AppSidebar />
+              <SidebarInset>
+                <TopHeader />
+                <main className="flex-1 overflow-auto p-6">
+                  {children}
+                </main>
+              </SidebarInset>
+            </SidebarProvider>
+          </TooltipProvider>
+        </AdConsoleAppProvider>
       </body>
     </html>
   );

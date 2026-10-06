@@ -24,37 +24,44 @@ import {
   SidebarSeparator,
 } from "@/components/ui/sidebar";
 import { CircleUserRound } from "lucide-react";
+import { useAdConsoleApp } from "@/components/shell/adconsole-app-provider";
 
 const navItems = [
   {
     title: "Dashboard",
     href: "/",
     icon: LayoutDashboard,
+    adminOnly: false,
   },
   {
     title: "Campañas",
     href: "/campaigns",
     icon: Megaphone,
+    adminOnly: false,
   },
   {
     title: "Anunciantes",
     href: "/advertisers",
     icon: Users,
+    adminOnly: false,
   },
   {
     title: "Espacios",
     href: "/ad-spaces",
     icon: LayoutGrid,
+    adminOnly: true,
   },
   {
     title: "Analytics",
     href: "/analytics",
     icon: BarChart3,
+    adminOnly: false,
   },
   {
     title: "Keywords",
     href: "/keywords",
     icon: Hash,
+    adminOnly: false,
   },
 ];
 
@@ -63,11 +70,15 @@ const secondaryItems = [
     title: "Ajustes",
     href: "/settings",
     icon: Settings,
+    adminOnly: true,
   },
 ];
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const { getViewHref, viewMode } = useAdConsoleApp();
+  const visibleNavItems = navItems.filter((item) => viewMode === "admin" || !item.adminOnly);
+  const visibleSecondaryItems = secondaryItems.filter((item) => viewMode === "admin" || !item.adminOnly);
 
   return (
     <Sidebar variant="sidebar" collapsible="icon">
@@ -81,7 +92,7 @@ export function AppSidebar() {
               Ad Console
             </span>
             <span className="text-[10px] font-medium uppercase tracking-[0.28em] text-sidebar-foreground/50">
-              by Prometheus
+              {viewMode === "admin" ? "Admin View" : "Vista Usuario"}
             </span>
           </div>
         </Link>
@@ -91,7 +102,7 @@ export function AppSidebar() {
         <SidebarGroup className="p-0">
           <SidebarGroupContent>
             <SidebarMenu className="gap-1">
-              {navItems.map((item) => {
+              {visibleNavItems.map((item) => {
                 const isActive =
                   item.href === "/"
                     ? pathname === "/"
@@ -100,7 +111,7 @@ export function AppSidebar() {
                 return (
                   <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton
-                      render={<Link href={item.href} />}
+                      render={<Link href={getViewHref(item.href)} />}
                       isActive={isActive}
                       tooltip={item.title}
                       className={
@@ -126,13 +137,13 @@ export function AppSidebar() {
         <SidebarGroup className="p-0">
           <SidebarGroupContent>
             <SidebarMenu>
-              {secondaryItems.map((item) => {
+              {visibleSecondaryItems.map((item) => {
                 const isActive = pathname.startsWith(item.href);
 
                 return (
                   <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton
-                      render={<Link href={item.href} />}
+                      render={<Link href={getViewHref(item.href)} />}
                       isActive={isActive}
                       tooltip={item.title}
                       className={
@@ -161,10 +172,10 @@ export function AppSidebar() {
           </div>
           <div className="flex min-w-0 flex-col overflow-hidden group-data-[collapsible=icon]:hidden">
             <span className="truncate text-sm font-semibold text-sidebar-foreground">
-              Operador
+              {viewMode === "admin" ? "Administrador" : "Operador"}
             </span>
             <span className="truncate text-[11px] text-sidebar-foreground/45">
-              Shop.PR
+              {viewMode === "admin" ? "Prometheus / Shop.PR" : "Shop.PR"}
             </span>
           </div>
           <CircleUserRound className="ml-auto h-4 w-4 group-data-[collapsible=icon]:hidden" />

@@ -1,9 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { ArrowLeft, Mail, Phone, Building2, Calendar, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { StatusBadge } from "@/components/shared/status-badge";
 import {
   BarChart,
@@ -15,11 +19,13 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { advertiserAnnualRevenueSeries } from "@/lib/adconsole/demo-fixtures";
+import { useAdConsoleApp } from "@/components/shell/adconsole-app-provider";
 import type { Advertiser, Campaign, CampaignStatus } from "@/lib/types";
 
 interface AdvertiserDetailProps {
-  advertiser: Advertiser;
-  campaigns: Campaign[];
+  advertiserId: string;
+  initialAdvertisers: Advertiser[];
+  initialCampaigns: Campaign[];
 }
 
 function formatCurrency(cents: number): string {
@@ -27,9 +33,42 @@ function formatCurrency(cents: number): string {
 }
 
 export function AdvertiserDetail({
-  advertiser,
-  campaigns,
+  advertiserId,
+  initialAdvertisers,
+  initialCampaigns,
 }: AdvertiserDetailProps) {
+  const {
+    advertisers: runtimeAdvertisers,
+    campaigns: runtimeCampaigns,
+    getViewHref,
+    hydrated,
+    updateAdvertiser,
+  } = useAdConsoleApp();
+  const advertisers = hydrated ? runtimeAdvertisers : initialAdvertisers;
+  const campaigns = hydrated ? runtimeCampaigns : initialCampaigns;
+  const advertiser = advertisers.find((item) => item.id === advertiserId);
+  const [editOpen, setEditOpen] = useState(false);
+  const [draft, setDraft] = useState<Partial<Advertiser>>({});
+
+  if (!advertiser && !hydrated) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-4 py-20">
+        <h2 className="text-xl font-semibold">Cargando anunciante...</h2>
+      </div>
+    );
+  }
+
+  if (!advertiser) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-4 py-20">
+        <h2 className="text-xl font-semibold">Anunciante no encontrado</h2>
+        <Button render={<Link href={getViewHref("/advertisers")} />} variant="outline">
+          Volver a anunciantes
+        </Button>
+      </div>
+    );
+  }
+
   const advertiserCampaigns = campaigns.filter((campaign) => campaign.advertiserId === advertiser.id);
   const ctr =
     advertiser.totalImpressions > 0
@@ -40,7 +79,7 @@ export function AdvertiserDetail({
     <div className="space-y-6">
       <div className="flex items-start justify-between">
         <div className="flex items-start gap-4">
-          <Button render={<Link href="/advertisers" />} variant="outline" size="icon">
+          <Button render={<Link href={getViewHref("/advertisers")} />} variant="outline" size="icon">
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div className="flex items-center gap-4">
@@ -58,10 +97,27 @@ export function AdvertiserDetail({
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setDraft({
+                name: advertiser.name,
+                contact: advertiser.contact,
+                billingInfo: advertiser.billingInfo,
+                monthlyBudgetCents: advertiser.monthlyBudgetCents,
+                contractStart: advertiser.contractStart,
+                contractEnd: advertiser.contractEnd,
+              });
+              setEditOpen(true);
+            }}
+          >
             Editar Perfil
           </Button>
-          <Button size="sm">
+          <Button
+            size="sm"
+            render={<Link href={getViewHref(`/campaigns/new?advertiserId=${advertiser.id}`)} />}
+          >
             <Plus className="h-3.5 w-3.5 mr-1.5" />
             Nueva Campaña
           </Button>
@@ -174,7 +230,12 @@ export function AdvertiserDetail({
             <CardTitle className="text-base font-semibold">
               Campañas ({advertiserCampaigns.length})
             </CardTitle>
-            <a href="#" className="text-xs text-primary hover:underline">Ver todas</a>
+            <Link
+              href={getViewHref(`/campaigns?advertiser=${encodeURIComponent(advertiser.name)}`)}
+              className="text-xs text-primary hover:underline"
+            >
+              Ver todas
+            </Link>
           </div>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -206,6 +267,127 @@ export function AdvertiserDetail({
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent className="max-w-xl" showCloseButton={false}>
+          <DialogHeader>
+            <DialogTitle>Editar perfil del anunciante</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2 sm:col-span-2">
+              <Label htmlFor="advertiser-name">Nombre</Label>
+              <Input
+                id="advertiser-name"
+                value={draft.name ?? ""}
+                onChange={(event) =>
+                  setDraft((current) => ({ ...current, name: event.target.value }))
+                }
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="advertiser-contact-name">Contacto</Label>
+              <Input
+                id="advertiser-contact-name"
+                value={draft.contact?.name ?? ""}
+                onChange={(event) =>
+                  setDraft((current) => ({
+                    ...current,
+                    contact: {
+                      ...current.contact,
+                      email: current.contact?.email ?? advertiser.contact.email,
+                      phone: current.contact?.phone ?? advertiser.contact.phone,
+                      name: event.target.value,
+                    },
+                  }))
+                }
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="advertiser-contact-email">Email</Label>
+              <Input
+                id="advertiser-contact-email"
+                value={draft.contact?.email ?? ""}
+                onChange={(event) =>
+                  setDraft((current) => ({
+                    ...current,
+                    contact: {
+                      ...current.contact,
+                      name: current.contact?.name ?? advertiser.contact.name,
+                      phone: current.contact?.phone ?? advertiser.contact.phone,
+                      email: event.target.value,
+                    },
+                  }))
+                }
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="advertiser-phone">Teléfono</Label>
+              <Input
+                id="advertiser-phone"
+                value={draft.contact?.phone ?? ""}
+                onChange={(event) =>
+                  setDraft((current) => ({
+                    ...current,
+                    contact: {
+                      ...current.contact,
+                      name: current.contact?.name ?? advertiser.contact.name,
+                      email: current.contact?.email ?? advertiser.contact.email,
+                      phone: event.target.value,
+                    },
+                  }))
+                }
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="advertiser-company">Razón social</Label>
+              <Input
+                id="advertiser-company"
+                value={draft.billingInfo?.companyName ?? ""}
+                onChange={(event) =>
+                  setDraft((current) => ({
+                    ...current,
+                    billingInfo: {
+                      ...current.billingInfo,
+                      companyName: event.target.value,
+                      taxId: current.billingInfo?.taxId ?? advertiser.billingInfo?.taxId,
+                    },
+                  }))
+                }
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="advertiser-tax-id">Tax ID</Label>
+              <Input
+                id="advertiser-tax-id"
+                value={draft.billingInfo?.taxId ?? ""}
+                onChange={(event) =>
+                  setDraft((current) => ({
+                    ...current,
+                    billingInfo: {
+                      ...current.billingInfo,
+                      companyName: current.billingInfo?.companyName ?? advertiser.billingInfo?.companyName,
+                      taxId: event.target.value,
+                    },
+                  }))
+                }
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditOpen(false)}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={() => {
+                updateAdvertiser(advertiser.id, draft);
+                setEditOpen(false);
+              }}
+            >
+              Guardar Cambios
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

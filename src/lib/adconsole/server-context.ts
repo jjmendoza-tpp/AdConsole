@@ -1,7 +1,13 @@
 import "server-only";
 
 import { cookies, headers } from "next/headers";
-import { createAdConsoleRequestContext } from "./config";
+import {
+  createAdConsoleRequestContext,
+  normalizeAdConsoleViewMode,
+} from "./config";
+
+export const ADCONSOLE_VIEW_COOKIE = "adconsole_view";
+export const ADCONSOLE_VIEW_QUERY_PARAM = "view";
 
 function firstNonEmpty(...values: Array<string | null | undefined>): string | null {
   for (const value of values) {
@@ -14,7 +20,19 @@ function firstNonEmpty(...values: Array<string | null | undefined>): string | nu
   return null;
 }
 
-export async function getServerAdConsoleRequestContext() {
+function normalizeRequestedViewMode(
+  value: string | string[] | undefined,
+) {
+  if (Array.isArray(value)) {
+    return normalizeAdConsoleViewMode(value[0]);
+  }
+
+  return normalizeAdConsoleViewMode(value);
+}
+
+export async function getServerAdConsoleRequestContext(options?: {
+  requestedViewMode?: string | string[] | undefined;
+}) {
   const requestHeaders = await headers();
   const cookieStore = await cookies();
 
@@ -37,8 +55,16 @@ export async function getServerAdConsoleRequestContext() {
     cookieStore.get("adconsole_access_token")?.value,
   );
 
+  const requestedViewMode = normalizeRequestedViewMode(
+    options?.requestedViewMode,
+  );
+  const cookieViewMode = normalizeAdConsoleViewMode(
+    cookieStore.get(ADCONSOLE_VIEW_COOKIE)?.value,
+  );
+
   return createAdConsoleRequestContext({
     tenantId,
     accessToken,
+    viewMode: requestedViewMode ?? cookieViewMode ?? undefined,
   });
 }

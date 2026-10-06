@@ -1,5 +1,3 @@
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import { AdvertiserDetail } from "@/components/advertisers/advertiser-detail";
 import { IntegrationState } from "@/components/shared/integration-state";
 import { getAdConsoleErrorState } from "@/lib/adconsole/errors";
@@ -9,13 +7,8 @@ import { getServerAdConsoleRequestContext } from "@/lib/adconsole/server-context
 type AdvertiserDetailPageState =
   | {
       kind: "ready";
-      advertiser: NonNullable<
-        Awaited<ReturnType<ReturnType<typeof getAdConsoleRepository>["getAdvertiserById"]>>
-      >;
+      advertisers: Awaited<ReturnType<ReturnType<ReturnType<typeof getAdConsoleRepository>["listAdvertisers"]>>>;
       campaigns: Awaited<ReturnType<ReturnType<typeof getAdConsoleRepository>["listCampaigns"]>>;
-    }
-  | {
-      kind: "notFound";
     }
   | {
       kind: "state";
@@ -25,20 +18,18 @@ type AdvertiserDetailPageState =
 async function loadAdvertiserDetailPageState(
   id: string,
 ): Promise<AdvertiserDetailPageState> {
+  void id;
+
   try {
     const repository = getAdConsoleRepository(
       await getServerAdConsoleRequestContext(),
     );
-    const [advertiser, campaigns] = await Promise.all([
-      repository.getAdvertiserById(id),
+    const [advertisers, campaigns] = await Promise.all([
+      repository.listAdvertisers(),
       repository.listCampaigns(),
     ]);
 
-    if (!advertiser) {
-      return { kind: "notFound" };
-    }
-
-    return { kind: "ready", advertiser, campaigns };
+    return { kind: "ready", advertisers, campaigns };
   } catch (error) {
     const errorState = getAdConsoleErrorState(error);
 
@@ -58,17 +49,6 @@ export default async function AdvertiserDetailPage({
   const { id } = await params;
   const state = await loadAdvertiserDetailPageState(id);
 
-  if (state.kind === "notFound") {
-    return (
-      <div className="flex flex-col items-center justify-center py-20 gap-4">
-        <h2 className="text-xl font-semibold">Anunciante no encontrado</h2>
-        <Button render={<Link href="/advertisers" />} variant="outline">
-          Volver a anunciantes
-        </Button>
-      </div>
-    );
-  }
-
   if (state.kind === "state") {
     return (
       <IntegrationState
@@ -81,8 +61,9 @@ export default async function AdvertiserDetailPage({
 
   return (
     <AdvertiserDetail
-      advertiser={state.advertiser}
-      campaigns={state.campaigns}
+      advertiserId={id}
+      initialAdvertisers={state.advertisers}
+      initialCampaigns={state.campaigns}
     />
   );
 }

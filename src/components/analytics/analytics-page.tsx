@@ -1,8 +1,16 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   AreaChart,
   Area,
@@ -32,6 +40,7 @@ import {
   AlertTriangle,
   Key,
 } from "lucide-react";
+import { useAdConsoleApp } from "@/components/shell/adconsole-app-provider";
 
 interface AnalyticsPageProps {
   campaigns: Campaign[];
@@ -92,9 +101,28 @@ export function AnalyticsPage({
   revenueData,
   channelBreakdown,
 }: AnalyticsPageProps) {
-  const revenueChartData = getRevenueChartData(revenueData);
-  const campaignsByStatus = getCampaignsByStatus(campaigns);
-  const topCampaigns = getTopCampaigns(campaigns);
+  const {
+    campaigns: runtimeCampaigns,
+    downloadCsv,
+    hydrated,
+    pushFeedback,
+  } = useAdConsoleApp();
+  const [range, setRange] = useState<7 | 14 | 30>(30);
+  const [reportDialog, setReportDialog] = useState<null | "detailed" | "campaigns" | "inventory">(null);
+  const activeCampaigns = hydrated ? runtimeCampaigns : campaigns;
+  const filteredRevenueData = revenueData.slice(-range);
+  const revenueChartData = useMemo(
+    () => getRevenueChartData(filteredRevenueData),
+    [filteredRevenueData],
+  );
+  const campaignsByStatus = useMemo(
+    () => getCampaignsByStatus(activeCampaigns),
+    [activeCampaigns],
+  );
+  const topCampaigns = useMemo(
+    () => getTopCampaigns(activeCampaigns),
+    [activeCampaigns],
+  );
 
   return (
     <div className="space-y-6">
@@ -105,10 +133,19 @@ export function AnalyticsPage({
             Visualiza el rendimiento de tus campañas en tiempo real
           </p>
         </div>
-        <Button variant="outline" size="sm">
-          <Calendar className="mr-2 h-4 w-4" />
-          Últimos 30 días
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger render={<Button variant="outline" size="sm" />}>
+            <Calendar className="mr-2 h-4 w-4" />
+            Últimos {range} días
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-44">
+            {[7, 14, 30].map((option) => (
+              <DropdownMenuItem key={option} onClick={() => setRange(option as 7 | 14 | 30)}>
+                Últimos {option} días
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -206,10 +243,14 @@ export function AnalyticsPage({
                   <span className="text-muted-foreground">CPM Medio: </span>
                   <span className="font-bold">$2.45</span>
                 </div>
-                <a href="#" className="text-primary inline-flex items-center gap-1 hover:underline">
+                <button
+                  type="button"
+                  onClick={() => setReportDialog("detailed")}
+                  className="text-primary inline-flex items-center gap-1 hover:underline"
+                >
                   Ver reporte detallado
                   <ArrowRight className="h-3.5 w-3.5" />
-                </a>
+                </button>
               </div>
             </CardContent>
           </Card>
@@ -256,7 +297,13 @@ export function AnalyticsPage({
                     <CardTitle className="text-base font-semibold">
                       Top Campañas por Impresiones
                     </CardTitle>
-                    <a href="#" className="text-xs text-primary hover:underline">Ver Reporte Full</a>
+                    <button
+                      type="button"
+                      onClick={() => setReportDialog("campaigns")}
+                      className="text-xs text-primary hover:underline"
+                    >
+                      Ver Reporte Full
+                    </button>
                   </div>
                 </CardHeader>
                 <CardContent>
@@ -365,6 +412,92 @@ export function AnalyticsPage({
           </div>
         </TabsContent>
       </Tabs>
+
+      <Dialog open={reportDialog !== null} onOpenChange={(open) => !open && setReportDialog(null)}>
+        <DialogContent className="max-w-xl" showCloseButton={false}>
+          <DialogHeader>
+            <DialogTitle>
+              {reportDialog === "detailed"
+                ? "Reporte detallado de revenue"
+                : reportDialog === "campaigns"
+                ? "Reporte full de campañas"
+                : "Reporte de inventario"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 text-sm">
+            {reportDialog === "detailed" && (
+              <div className="space-y-2">
+                <p className="text-muted-foreground">
+                  Revenue consolidado para los últimos {range} días con foco en ROAS, CPM y top advertiser.
+                </p>
+                <ul className="space-y-2 rounded-lg border bg-muted/20 p-4">
+                  <li>Revenue acumulado: ${filteredRevenueData.reduce((sum, item) => sum + item.revenue, 0).toLocaleString()}</li>
+                  <li>Clicks acumulados: {filteredRevenueData.reduce((sum, item) => sum + item.clicks, 0).toLocaleString()}</li>
+                  <li>Impresiones acumuladas: {filteredRevenueData.reduce((sum, item) => sum + item.impressions, 0).toLocaleString()}</li>
+                </ul>
+              </div>
+            )}
+            {reportDialog === "campaigns" && (
+              <div className="space-y-2">
+                <p className="text-muted-foreground">
+                  Resumen ampliado de las campañas más visibles para el rango seleccionado.
+                </p>
+                <ul className="space-y-2 rounded-lg border bg-muted/20 p-4">
+                  {topCampaigns.slice(0, 5).map((campaign) => (
+                    <li key={campaign.name}>
+                      {campaign.name}: {campaign.impressions.toLocaleString()} impresiones / {campaign.clicks.toLocaleString()} clicks
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {reportDialog === "inventory" && (
+              <div className="space-y-2">
+                <p className="text-muted-foreground">
+                  Mix de inventario simulado para reuniones comerciales y revisión interna.
+                </p>
+                <ul className="space-y-2 rounded-lg border bg-muted/20 p-4">
+                  {analyticsInventoryMix.map((item) => (
+                    <li key={item.name}>
+                      {item.name}: {item.percentage}%
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setReportDialog(null)}>
+              Cerrar
+            </Button>
+            <Button
+              onClick={() => {
+                const rows =
+                  reportDialog === "campaigns"
+                    ? topCampaigns.map((campaign) => ({
+                        name: campaign.name,
+                        impressions: campaign.impressions,
+                        clicks: campaign.clicks,
+                      }))
+                    : filteredRevenueData.map((item) => ({
+                        date: item.date,
+                        revenue: item.revenue,
+                        impressions: item.impressions,
+                        clicks: item.clicks,
+                      }));
+                downloadCsv(
+                  reportDialog === "campaigns" ? "analytics-campaigns.csv" : "analytics-revenue.csv",
+                  rows,
+                );
+                setReportDialog(null);
+              }}
+            >
+              <Download className="mr-2 h-4 w-4" />
+              Exportar CSV
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

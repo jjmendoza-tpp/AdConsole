@@ -1,20 +1,14 @@
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import { CampaignDetail } from "@/components/campaigns/campaign-detail";
 import { IntegrationState } from "@/components/shared/integration-state";
 import { getAdConsoleErrorState } from "@/lib/adconsole/errors";
 import { getAdConsoleRepository } from "@/lib/adconsole/repository";
 import { getServerAdConsoleRequestContext } from "@/lib/adconsole/server-context";
+import type { Campaign } from "@/lib/types";
 
 type CampaignDetailPageState =
   | {
       kind: "ready";
-      campaign: NonNullable<
-        Awaited<ReturnType<ReturnType<typeof getAdConsoleRepository>["getCampaignById"]>>
-      >;
-    }
-  | {
-      kind: "notFound";
+      campaigns: Campaign[];
     }
   | {
       kind: "state";
@@ -24,17 +18,15 @@ type CampaignDetailPageState =
 async function loadCampaignDetailPageState(
   id: string,
 ): Promise<CampaignDetailPageState> {
+  void id;
+
   try {
     const repository = getAdConsoleRepository(
       await getServerAdConsoleRequestContext(),
     );
-    const campaign = await repository.getCampaignById(id);
+    const campaigns = await repository.listCampaigns();
 
-    if (!campaign) {
-      return { kind: "notFound" };
-    }
-
-    return { kind: "ready", campaign };
+    return { kind: "ready", campaigns };
   } catch (error) {
     const errorState = getAdConsoleErrorState(error);
 
@@ -54,17 +46,6 @@ export default async function CampaignDetailPage({
   const { id } = await params;
   const state = await loadCampaignDetailPageState(id);
 
-  if (state.kind === "notFound") {
-    return (
-      <div className="flex flex-col items-center justify-center py-20 gap-4">
-        <h2 className="text-xl font-semibold">Campaña no encontrada</h2>
-        <Button render={<Link href="/campaigns" />} variant="outline">
-          Volver a campañas
-        </Button>
-      </div>
-    );
-  }
-
   if (state.kind === "state") {
     return (
       <IntegrationState
@@ -75,5 +56,5 @@ export default async function CampaignDetailPage({
     );
   }
 
-  return <CampaignDetail campaign={state.campaign} />;
+  return <CampaignDetail campaignId={id} initialCampaigns={state.campaigns} />;
 }
